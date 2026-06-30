@@ -4,6 +4,8 @@ const nextConfig = {
   // Replit / Render / Fly / a VM / Vercel without host-specific APIs.
   output: "standalone",
   reactStrictMode: true,
+  // node-postgres (and its optional deps) must stay external — never webpack-bundled.
+  serverExternalPackages: ["pg"],
   // Ensure the boot-time schema file ships with the standalone server output.
   outputFileTracingIncludes: {
     "/**": ["./db/schema.sql"],
