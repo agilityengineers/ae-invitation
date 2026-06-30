@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getVariant, listSlugs } from "@/lib/config";
 import { siteUrl } from "@/lib/env";
 import { LandingPage } from "@/components/landing/LandingPage";
+import { JsonLd } from "@/components/landing/JsonLd";
 
 /** Pre-render known slugs; render new ones on demand (ISR), revalidated on publish. */
 export const dynamicParams = true;
@@ -57,5 +58,10 @@ export default async function VariantPage({ params }: { params: Promise<{ slug: 
   // Public route serves published pages only; drafts preview at /admin/preview/[slug].
   if (!variant || !variant.published) notFound();
 
-  return <LandingPage variant={variant} />;
+  return (
+    <>
+      <JsonLd variant={variant} />
+      <LandingPage variant={variant} />
+    </>
+  );
 }
