@@ -87,6 +87,7 @@ export const proofPanelSchema = z.object({
 });
 
 export const logoTreatmentSchema = z.enum(["chip", "white", "hide"]).default("chip");
+export type LogoTreatment = z.infer<typeof logoTreatmentSchema>;
 
 /* ── 4.3 Copy — every section ────────────────────────────────────────────── */
 
