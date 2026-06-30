@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { listPublishedVariants } from "@/lib/config";
 import { siteUrl } from "@/lib/env";
 
+// Generated at request time so newly published variants appear without a rebuild.
+export const dynamic = "force-dynamic";
+
 /** Sitemap — root + published variants only (drafts are excluded). */
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
