@@ -67,6 +67,29 @@ details[open] .ae-faqplus {
   transform: rotate(45deg);
 }
 
+/* ── Admin form controls ─────────────────────────────────────────────────────── */
+.ae-input,
+.ae-textarea,
+.ae-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 9px;
+  font: 500 14px/1.4 var(--font-body);
+  color: var(--color-ink);
+  background: #fff;
+  outline: none;
+}
+.ae-input:focus,
+.ae-textarea:focus,
+.ae-select:focus {
+  border-color: var(--color-teal);
+}
+.ae-textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+
 /* ─────────────────────────────────────────────────────────────────────────────
    MOTION LAYER — recreated from the prototype, respecting prefers-reduced-motion.
    ───────────────────────────────────────────────────────────────────────────── */
