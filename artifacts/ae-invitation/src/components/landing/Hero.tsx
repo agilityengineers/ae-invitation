@@ -102,7 +102,7 @@ export function Hero({ variant, separator }: { variant: Variant; separator?: str
                 borderRadius: 20,
                 overflow: "hidden",
                 border: "1px solid rgba(255,255,255,.18)",
-                aspectRatio: "16 / 11",
+                aspectRatio: videoSrc ? "16 / 9" : "16 / 11",
                 boxShadow: "0 30px 60px rgba(0,0,0,.3)",
                 background: "#063A5A",
               }}
@@ -115,13 +115,10 @@ export function Hero({ variant, separator }: { variant: Variant; separator?: str
                   allowFullScreen
                   style={{
                     position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%,-50%)",
-                    width: "calc(100% * 11 / 9)",
+                    inset: 0,
+                    width: "100%",
                     height: "100%",
                     border: 0,
-                    pointerEvents: "none",
                   }}
                 />
               ) : (
