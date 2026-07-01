@@ -1,17 +1,20 @@
-# Replit configuration for the Agility Engineers landing-page generator.
-# Node 20 + built-in Postgres 16. The workspace "Run" button starts the dev server;
-# Deployments use build + start (choose a RESERVED VM deployment in the Deploy UI —
-# the app uses on-demand ISR + an in-memory rate limiter, so a single persistent
-# instance is correct; Autoscale would serve stale pages across instances).
-
-modules = ["nodejs-20", "postgresql-16"]
-
-run = "npm run dev"
-
-[[ports]]
-localPort = 3000
-externalPort = 80
+modules = ["nodejs-24"]
 
 [deployment]
-build = ["sh", "-c", "npm ci && npm run build"]
-run = ["sh", "-c", "npm run start"]
+router = "application"
+deploymentTarget = "autoscale"
+
+[deployment.postBuild]
+args = ["pnpm", "store", "prune"]
+env = { "CI" = "true" }
+
+[workflows]
+runButton = "Project"
+
+[agent]
+stack = "PNPM_WORKSPACE"
+expertMode = true
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 20000

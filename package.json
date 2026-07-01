@@ -1,46 +1,16 @@
 {
-  "name": "ae-invitation",
-  "version": "0.1.0",
-  "private": true,
-  "description": "Agility Engineers landing-page generator — Client Target + Talent/Directory StoryBrand templates",
-  "engines": {
-    "node": ">=20"
-  },
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "typecheck": "tsc --noEmit",
-    "db:init": "tsx scripts/db-init.ts",
-    "validate:schema": "tsx scripts/validate-defaults.ts",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.39.0",
-    "@aws-sdk/client-s3": "^3.700.0",
-    "@aws-sdk/s3-request-presigner": "^3.700.0",
-    "next": "^15.3.0",
-    "openai": "^4.77.0",
-    "pg": "^8.13.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "zod": "^3.23.8"
-  },
+  "private": true,
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.0",
-    "@types/node": "^20.17.0",
-    "@types/pg": "^8.11.10",
-    "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^6.0.3",
-    "eslint": "^8.57.1",
-    "eslint-config-next": "^15.5.19",
-    "tailwindcss": "^4.1.0",
-    "tsx": "^4.21.0",
-    "typescript": "^5.7.0",
-    "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.1.9"
+    "prettier": "^3.8.4",
+    "typescript": "~5.9.3"
   }
 }
