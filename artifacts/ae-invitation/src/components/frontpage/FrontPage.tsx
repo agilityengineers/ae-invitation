@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
 import { Lightbulb, Code2 } from "lucide-react";
-import { Logo } from "@/components/landing/Logo";
+import { Logo, HEADER_LOGO_SIZE } from "@/components/landing/Logo";
 import { NetworkBackdrop } from "@/components/landing/NetworkBackdrop";
 
 /**
@@ -43,7 +43,7 @@ function FrontHeader() {
           gap: 16,
         }}
       >
-        <Logo treatment="chip" />
+        <Logo treatment="chip" size={HEADER_LOGO_SIZE} />
       </header>
     </div>
   );
