@@ -1,0 +1,1 @@
+- [Next.js → Vite+Express migration](nextjs-to-vite-express-migration.md) — porting imported Next apps into pnpm_workspace: Express 5 params typing, Vite PORT-at-config, wouter/fonts, per-page auth gating.
