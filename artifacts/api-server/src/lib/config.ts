@@ -1,6 +1,7 @@
 import { query, withClient } from "@/lib/db";
 import { ensureReady } from "@/lib/bootstrap";
-import { variantSchema, type Variant } from "@/config/schema";
+import { variantSchema, frontPageSchema, type Variant, type FrontPage } from "@/config/schema";
+import { frontPageDefault } from "@/config/defaults";
 
 type TemplateType = Variant["templateType"];
 
@@ -153,4 +154,32 @@ export async function setAsDefault(slug: string): Promise<Variant | null> {
 export async function deleteVariant(slug: string): Promise<void> {
   await ensureReady();
   await query("DELETE FROM variants WHERE slug = $1", [slug]);
+}
+
+/* ── Front page (singleton in `site_content`, key 'frontpage') ───────────────
+ * Same validate-on-read/write discipline as variants. Falls back to the bundled
+ * default whenever the row is missing or fails validation, so the page never
+ * dead-ends. */
+
+export async function getFrontPage(): Promise<FrontPage> {
+  await ensureReady();
+  const { rows } = await query<{ config: unknown }>(
+    "SELECT config FROM site_content WHERE key = 'frontpage'",
+  );
+  if (!rows[0]) return frontPageDefault;
+  const parsed = frontPageSchema.safeParse(rows[0].config);
+  return parsed.success ? parsed.data : frontPageDefault;
+}
+
+export async function saveFrontPage(input: FrontPage): Promise<FrontPage> {
+  await ensureReady();
+  const frontPage = frontPageSchema.parse(input);
+  const { rows } = await query<{ config: FrontPage }>(
+    `INSERT INTO site_content (key, config, updated_at)
+     VALUES ('frontpage', $1::jsonb, now())
+     ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config, updated_at = now()
+     RETURNING config`,
+    [JSON.stringify(frontPage)],
+  );
+  return frontPageSchema.parse(rows[0].config);
 }

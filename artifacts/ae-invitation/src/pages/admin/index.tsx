@@ -30,9 +30,14 @@ export default function AdminHome() {
       <div>
         <div className="mb-6 flex items-center justify-between gap-4">
           <h1 className="font-display text-2xl font-extrabold text-navy">Pages</h1>
-          <Link href="/admin/new" className="ae-cta rounded-[10px] bg-cta px-4 py-2.5 font-display text-sm font-bold text-white">
-            New page →
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/admin/frontpage" className="rounded-[10px] border border-line px-4 py-2.5 font-display text-sm font-bold text-navy">
+              Edit front page
+            </Link>
+            <Link href="/admin/new" className="ae-cta rounded-[10px] bg-cta px-4 py-2.5 font-display text-sm font-bold text-white">
+              New page →
+            </Link>
+          </div>
         </div>
         {isError ? (
           <p className="rounded-xl border border-line bg-white p-5 text-muted">
