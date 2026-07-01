@@ -1,5 +1,10 @@
 # Handoff: Agility Engineers Landing-Page Generator (Client + Talent templates)
 
+> **✅ Implemented.** This repo now contains the full Next.js app built to the spec below.
+> To run, configure, and deploy it, see **[`docs/DEPLOY.md`](docs/DEPLOY.md)**. The spec below
+> remains the source of truth for *what* was built; `docs/DEPLOY.md` covers *how to run it*.
+
+
 > **For the coding agent (Claude Code):** This bundle is a **design + behavior reference**, exported from Claude Design. The two `.dc.html` files are **working HTML prototypes** — they show the exact look, copy, motion, and admin behavior the client wants. **Do not ship the HTML as-is.** Recreate it in the target codebase using that codebase's patterns. The target codebase already exists (see "Repos to match" below) — you are **extending it**, not greenfielding.
 
 ---
