@@ -119,7 +119,6 @@ export function Hero({ variant, separator }: { variant: Variant; separator?: str
                     width: "100%",
                     height: "100%",
                     border: 0,
-                    pointerEvents: "none",
                   }}
                 />
               ) : (
