@@ -8,6 +8,7 @@ import {
   getVariant,
   saveVariant,
   setPublished,
+  setAsDefault,
   deleteVariant,
   slugExists,
 } from "@/lib/config";
@@ -67,10 +68,10 @@ router.put("/variants", sameOrigin, requireAuth, async (req, res) => {
   res.json({ variant: saved });
 });
 
-/** POST — publish / unpublish / delete a variant. */
+/** POST — publish / unpublish / delete / mark-default a variant. */
 const actionSchema = z.object({
   slug: z.string(),
-  action: z.enum(["publish", "unpublish", "delete"]),
+  action: z.enum(["publish", "unpublish", "delete", "markDefault"]),
 });
 router.post("/variants", sameOrigin, requireAuth, async (req, res) => {
   const parsed = actionSchema.safeParse(req.body);
@@ -83,6 +84,16 @@ router.post("/variants", sameOrigin, requireAuth, async (req, res) => {
   if (action === "delete") {
     await deleteVariant(slug);
     res.json({ ok: true });
+    return;
+  }
+
+  if (action === "markDefault") {
+    const saved = await setAsDefault(slug);
+    if (!saved) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+    res.json({ variant: saved });
     return;
   }
 

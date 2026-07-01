@@ -13,6 +13,7 @@ export const clientDemo: Variant = {
   slug: "specialty-insurance-leaders",
   label: "Specialty Insurance — Leadership",
   published: true,
+  isDefault: false,
   audience: "specialty insurance leaders",
   targeting: { industry: "Specialty insurance carrier", title: "VP of Operations", company: "", painPoints: [] },
 };
@@ -22,6 +23,7 @@ export const talentDemo: Variant = {
   slug: "backend-engineers",
   label: "Backend Engineers",
   published: true,
+  isDefault: false,
   audience: "backend engineers",
   targeting: { role: "Backend developer", discipline: "backend", seniority: "Senior", location: "Remote (US)" },
 };

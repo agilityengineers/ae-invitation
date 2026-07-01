@@ -17,8 +17,12 @@ CREATE TABLE IF NOT EXISTS variants (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- The generic page served at /client and /talent: at most one default per type.
+ALTER TABLE variants ADD COLUMN IF NOT EXISTS is_default BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IF NOT EXISTS variants_published_idx ON variants (published);
 CREATE INDEX IF NOT EXISTS variants_template_idx ON variants (template_type);
+CREATE UNIQUE INDEX IF NOT EXISTS variants_one_default_per_type
+  ON variants (template_type) WHERE is_default;
 
 CREATE TABLE IF NOT EXISTS leads (
   id            BIGSERIAL PRIMARY KEY,

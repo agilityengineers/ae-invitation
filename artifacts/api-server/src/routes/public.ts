@@ -1,5 +1,7 @@
 import { Router, type IRouter } from "express";
-import { listPublishedVariants, getVariant } from "@/lib/config";
+import { listPublishedVariants, getVariant, getDefaultVariant } from "@/lib/config";
+import { defaultForTemplate } from "@/config/defaults";
+import { templateTypeSchema } from "@/config/schema";
 
 const router: IRouter = Router();
 
@@ -10,6 +12,21 @@ router.get("/public/variants", async (_req, res) => {
   } catch {
     res.status(503).json({ error: "Database unavailable" });
   }
+});
+
+/**
+ * Public: the generic default page for a template type, served at /client and
+ * /talent. Returns the admin-designated default if one is set (regardless of its
+ * published flag), otherwise the bundled template constant — so it never 404s.
+ */
+router.get("/public/defaults/:type", async (req, res) => {
+  const parsed = templateTypeSchema.safeParse(req.params.type);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid type" });
+    return;
+  }
+  const def = await getDefaultVariant(parsed.data).catch(() => null);
+  res.json({ variant: def ?? defaultForTemplate(parsed.data) });
 });
 
 /** Public: a single published variant by slug (landing + booking pages). */

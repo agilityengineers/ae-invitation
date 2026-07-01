@@ -268,6 +268,9 @@ export const variantSchema = z.object({
   slug: slugSchema,
   label: z.string().min(1), // internal admin name
   published: z.boolean().default(false),
+  // The one variant served at /client (or /talent) as the public generic page for
+  // its templateType. At most one default per type; independent of `published`.
+  isDefault: z.boolean().default(false),
 
   // Targeting + audience interpolation token (Content-Authority {audience} pattern)
   targeting: targetingSchema.default({}),

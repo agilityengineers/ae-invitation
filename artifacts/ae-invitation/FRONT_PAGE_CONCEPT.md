@@ -204,7 +204,7 @@ dependency).
 | Heading | **I have something to build or support** | **I'm a developer or on a delivery team** |
 | Self-ID line | "You're evaluating a partner to take an idea from proof of concept to live, supported software." | "You're joining a project, need team resources, or want to get found for the next one." |
 | Action (outline btn) | `Explore what we build →` | `Go to the directory →` |
-| Links to | Client landing (see §7) | Directory / talent landing (see §7) |
+| Links to | `/client` (admin's default client page) | `/talent` (admin's default talent page) |
 
 **Button treatment for the two paths:** **outline/secondary, not green.** Use
 `border: 1.5px solid var(--color-navy)` with navy text (Card A) and teal (Card B), filling on
@@ -238,8 +238,9 @@ visitor reads here is the promise they meet on arrival — no bait-and-switch. T
 "button that points to a client" from the brief, given its own prominence and the site's
 strongest CTA styling.
 
-**Destination:** the client-side conversion — either the client landing page or straight into
-the booking flow (§7 flags which to confirm).
+**Destination:** `/client` — the same generic client page as Card A, just given the one green
+(hottest) treatment so a ready client can skip the fork in one click. The client side
+intentionally has two entries (card + standalone CTA); that is emphasis, not an error.
 
 ### 4.5 Trust strip (minimal orientation — optional)
 
@@ -257,13 +258,10 @@ strip entirely.
 
 ### 4.6 Footer
 
-- **Reuse `src/components/landing/Footer.tsx` as-is** — navy-900 band, logo, tagline
-  ("From project to product. Moving real ideas to production."), phone `(404) 476-7800`,
-  auto-year legal row, Terms + Privacy links.
-- One deviation to confirm: the footer's default green CTA (`Book a meeting`) can stay (it
-  reinforces the client path) or be dropped to keep the page's single-decision purity. **Recommend
-  keeping it** — by the footer the visitor has passed the fork, so a client CTA is a reasonable
-  catch, and it matches every other page's footer exactly. (§7)
+- A **lightweight `FrontFooter`** that mirrors `Footer.tsx`'s navy-900 band, `Logo`, tagline
+  ("From project to product. Moving real ideas to production."), auto-year legal row, and Terms +
+  Privacy links — but **without** the variant-bound qualifier `CtaButton` (the front page has no
+  variant/qualifier). Visually identical band; no competing conversion action.
 
 ---
 
@@ -274,8 +272,8 @@ strip entirely.
 - **No modal, no qualifier on this page.** Unlike the landing pages (where every CTA opens the
   qualifier), the front page's job is to *hand off*. Path clicks are plain navigations to the
   destination; the qualifier lives on the destination as it does today.
-- **The standalone green CTA** may either navigate to the client landing or open booking
-  directly — confirm in §7.
+- **The standalone green CTA** navigates to `/client` (a base-aware wouter `<Link>`), same as
+  Card A.
 - Focus order: skip-link → header → Card A → Card B → standalone CTA → footer. Both cards are
   reachable and operable by keyboard; `.ae-lift` hover has a matching `:focus-visible` state.
 
@@ -299,46 +297,60 @@ pure router.
 
 ---
 
-## 7. Assumptions to confirm before build
+## 7. Resolved decisions (as built)
 
-1. **Where the front page lives.** Today `/` renders an internal *landing-page-generator index*
-   (`src/pages/home.tsx`), not a public entry point. **Recommendation:** make this new front page
-   the `/` route and move the internal index to `/admin` (it already links there) or `/_generator`.
-   **Confirm** you want `/` repurposed as the public front page.
-2. **Client path destination.** Options: (a) a published **client landing page** in this app
-   (e.g. a `/client` slug), or (b) the main marketing site `https://www.agility-engineers.com/`.
-   Recommend (a) if a client landing is published, so the whole flow stays in one system.
-   **Confirm the exact URL/slug.**
-3. **Developer/team path destination.** Options: (a) a published **directory/talent landing page**
-   (e.g. `/directory`), or (b) `https://www.agility-engineers.com/` directory. The talent variant's
-   own conversion already points at `https://www.agility-engineers.com/`. **Confirm the exact URL/slug.**
-4. **Standalone client CTA target.** Straight into **booking** (fastest for a ready client) vs.
-   the **client landing** (more context first). Recommend booking if a Calendly/booking URL is
-   live; otherwise the client landing. **Confirm.**
-5. **"Project team" vs "developer" scope.** The brief's audience #2 mixes *internal team members
-   needing team-side flows/dev resources* with *external developers wanting to get found*. Both map
-   to the Directory today. If internal team members need a **different** destination (e.g. a
-   private project/resources area) than external developers, the single "developers & teams" card
-   should split or link to a directory landing that itself forks. **Confirm whether these are one
-   destination or two.**
-6. **Trust strip credentials.** No real logos/stats exist in the repo (all `[needs your data]`).
-   Ship the tagline-only strip, or provide assets. **Confirm.**
-7. **Footer CTA.** Keep the footer's default `Book a meeting` green CTA (recommended) or drop it
-   for single-decision purity. **Confirm.**
+Every open question from the first draft is now settled and implemented:
 
-Nothing above invents claims, stats, names, or logos — all placeholders reuse the existing
-`[needs your data]` convention.
+1. **Front page location.** `/` is the public front page (`FrontPage.tsx`), replacing the old
+   internal generator index (`src/pages/home.tsx`, deleted). The admin CMS is reached by typing
+   `/admin` — **no visible admin link** on the public page.
+2. **Client path destination.** Both the client card and the standalone green CTA → **`/client`**.
+3. **Developer/team path destination.** The developer/team card → **`/talent`**.
+4. **`/client` and `/talent` serve the admin-designated default.** Each renders whichever variant
+   the admin has marked **default** for that template type (see §7a), falling back to the bundled
+   generic template so the route never 404s.
+5. **Audience #2 scope.** Internal team members and external developers share the one Directory
+   destination (`/talent`) for now. If they later need to diverge, `/talent` is the place that
+   default page can itself fork — the front page doesn't change.
+6. **Trust strip.** Omitted to hold the one-job ceiling; the site tagline lives in the footer. No
+   invented logos/stats. (The optional strip in §4.5 remains a drop-in if real credentials arrive.)
+7. **Footer.** The front page uses a lightweight footer with **no** qualifier CTA (§4.6).
+
+### 7a. New capability: "default page per template type"
+
+`/client` and `/talent` don't hard-code content — they serve an admin-chosen page. This required a
+small, `published`-mirroring addition across the stack:
+
+- **Schema**: `isDefault: boolean` added to `variantSchema` (both the frontend and api-server
+  copies of `src/config/schema.ts`).
+- **DB**: `is_default` column on `variants` + a partial unique index
+  (`... (template_type) WHERE is_default`) enforcing **at most one default per type** (bootstrap +
+  `db/schema.sql`).
+- **Backend** (`api-server/src/lib/config.ts`): `getDefaultVariant(type)` and a transactional
+  `setAsDefault(slug)` (clears the old default of that type, sets the new one). `saveVariant`
+  persists the column.
+- **API**: `POST /api/variants { action: "markDefault" }` (admin) and
+  `GET /api/public/defaults/:type` (public; returns the default or the bundled fallback, always 200).
+- **Admin UI** (`VariantsTable`): a **"Default"** badge and a **"Set as default"** row action.
+
+**Rule to remember:** `isDefault` is **independent of `published`** — a page marked default is
+served at `/client`//talent` even if unpublished; publishing still only governs the page's own
+`/:slug` and the published list. This is intentional (marking default is the explicit act of
+choosing the public generic page), not a bug.
 
 ---
 
-## 8. Build notes for Claude Code
+## 8. Implementation summary (as built)
 
-- New component: `src/components/frontpage/FrontPage.tsx` (hero + cards + standalone CTA +
-  trust strip), plus a `PathCard` subcomponent. Reuse `Nav`, `Footer`, `Logo`, `NetworkBackdrop`,
-  and the `.ae-*` classes — **import, don't reimplement.**
-- Wire the route in `src/App.tsx` per §7.1.
-- Two path buttons: new **outline** variant (navy / teal). One standalone button: existing green
-  `.ae-cta` treatment. No new colors, fonts, or radii — everything comes from `@theme` in
-  `src/index.css`.
-- Keep total DOM light: hero, two cards, one CTA, one optional strip, footer. No sections beyond
-  these — that ceiling is the one-job constraint.
+- **Front page**: `src/components/frontpage/FrontPage.tsx` — `FrontHeader` (logo only), hero
+  (navy aurora + `NetworkBackdrop`), two `PathCard`s (client first), standalone green CTA,
+  `FrontFooter`. Reuses `Logo`, `NetworkBackdrop`, and the `.ae-*` classes; does **not** import
+  `Nav`/`Footer`/`CtaButton`/`QualifierRoot` (all variant/qualifier-bound). All internal links are
+  base-aware wouter `<Link>`s.
+- **Routes**: `src/pages/client.tsx` + `src/pages/talent.tsx` fetch `/api/public/defaults/:type`
+  and render `<LandingPage>`, with the bundled default as a hard fallback. Registered in `App.tsx`
+  before the `/:slug` catch-all.
+- **Buttons**: two path affordances are **outline** (navy / teal); the one standalone CTA is the
+  green `.ae-cta` treatment. No new colors, fonts, or radii — all from `@theme` in `src/index.css`.
+  A `.ae-lift:focus-visible` rule was added for keyboard parity on the cards.
+- **DOM stays light**: hero, two cards, one CTA, tagline footer — nothing beyond the one-job ceiling.

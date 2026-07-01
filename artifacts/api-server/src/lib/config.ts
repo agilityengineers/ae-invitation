@@ -1,6 +1,8 @@
-import { query } from "@/lib/db";
+import { query, withClient } from "@/lib/db";
 import { ensureReady } from "@/lib/bootstrap";
 import { variantSchema, type Variant } from "@/config/schema";
+
+type TemplateType = Variant["templateType"];
 
 /**
  * The only module that reads/writes variant configs. Postgres-backed (configs
@@ -74,12 +76,13 @@ export async function saveVariant(input: Variant): Promise<Variant> {
   await ensureReady();
   const variant = variantSchema.parse(input);
   const { rows } = await query<VariantRow>(
-    `INSERT INTO variants (slug, template_type, label, published, config, updated_at)
-     VALUES ($1, $2, $3, $4, $5::jsonb, now())
+    `INSERT INTO variants (slug, template_type, label, published, is_default, config, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, now())
      ON CONFLICT (slug) DO UPDATE SET
        template_type = EXCLUDED.template_type,
        label = EXCLUDED.label,
        published = EXCLUDED.published,
+       is_default = EXCLUDED.is_default,
        config = EXCLUDED.config,
        updated_at = now()
      RETURNING slug, config, created_at, updated_at`,
@@ -88,6 +91,7 @@ export async function saveVariant(input: Variant): Promise<Variant> {
       variant.templateType,
       variant.label,
       variant.published,
+      variant.isDefault,
       JSON.stringify(variant),
     ],
   );
@@ -98,6 +102,52 @@ export async function setPublished(slug: string, published: boolean): Promise<Va
   const existing = await getVariant(slug);
   if (!existing) return null;
   return saveVariant({ ...existing, published });
+}
+
+/** The variant currently marked default for a template type, or null if none. */
+export async function getDefaultVariant(templateType: TemplateType): Promise<Variant | null> {
+  await ensureReady();
+  const { rows } = await query<VariantRow>(
+    "SELECT slug, config, created_at, updated_at FROM variants WHERE template_type = $1 AND is_default = TRUE LIMIT 1",
+    [templateType],
+  );
+  return rows[0] ? rowToVariant(rows[0]) : null;
+}
+
+/**
+ * Make `slug` the sole default for its template type. Atomic: clears the flag on
+ * any current default of that type, then sets it here — keeping both the promoted
+ * column and the JSONB config in sync so the partial unique index is never violated.
+ */
+export async function setAsDefault(slug: string): Promise<Variant | null> {
+  const target = await getVariant(slug);
+  if (!target) return null;
+  await withClient(async (client) => {
+    await client.query("BEGIN");
+    try {
+      await client.query(
+        `UPDATE variants
+           SET is_default = FALSE,
+               config = jsonb_set(config, '{isDefault}', 'false'::jsonb),
+               updated_at = now()
+         WHERE template_type = $1 AND is_default = TRUE`,
+        [target.templateType],
+      );
+      await client.query(
+        `UPDATE variants
+           SET is_default = TRUE,
+               config = jsonb_set(config, '{isDefault}', 'true'::jsonb),
+               updated_at = now()
+         WHERE slug = $1`,
+        [slug],
+      );
+      await client.query("COMMIT");
+    } catch (err) {
+      await client.query("ROLLBACK");
+      throw err;
+    }
+  });
+  return getVariant(slug);
 }
 
 export async function deleteVariant(slug: string): Promise<void> {
