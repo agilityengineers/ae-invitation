@@ -38,6 +38,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
           <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-bg-alt" href="/admin">
             Pages
           </Link>
+          <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-bg-alt" href="/admin/frontpage">
+            Front page
+          </Link>
           <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-bg-alt" href="/admin/new">
             New page
           </Link>

@@ -1,27 +1,59 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Lightbulb, Code2 } from "lucide-react";
+import type { FrontPage as FrontPageConfig, FrontPageCard, Variant } from "@/config/schema";
+import { frontPageDefault, clientDefault } from "@/config/defaults";
+import { openBooking } from "@/lib/booking";
 import { Logo, HEADER_LOGO_SIZE } from "@/components/landing/Logo";
 import { NetworkBackdrop } from "@/components/landing/NetworkBackdrop";
 
 /**
  * The site's public front page (/). One job: route a visitor to the right side of
  * the business in one click — client vs. developer/team — plus a standalone client
- * CTA for people ready to act. Intentionally static: it has no variant, so it does
- * NOT use Nav/Footer/CtaButton/QualifierRoot (all of which are variant/qualifier
- * bound). It reuses the site's brand tokens, `.ae-*` classes, Logo, and the hero
- * NetworkBackdrop so it feels native to the rest of the site.
+ * CTA for people ready to act. Its copy is admin-editable: it fetches the
+ * singleton front-page config (falling back to the bundled default), so admins
+ * keep it current the same way they edit the landing pages. The "book a meeting"
+ * CTA opens the CLIENT default's scheduler directly, so it stays in sync whenever
+ * the admin changes the client scheduler. It reuses the site's brand tokens,
+ * `.ae-*` classes, Logo, and the hero NetworkBackdrop so it feels native.
  */
 export default function FrontPage() {
+  const { data, isError } = useQuery({
+    queryKey: ["frontpage"],
+    queryFn: async () => {
+      const res = await fetch("/api/public/frontpage");
+      if (!res.ok) throw new Error("unavailable");
+      return (await res.json()) as { frontPage: FrontPageConfig };
+    },
+    retry: false,
+  });
+
+  // The client default backs the "book a meeting" CTA's scheduler destination.
+  const clientQuery = useQuery({
+    queryKey: ["default-variant", "client"],
+    queryFn: async () => {
+      const res = await fetch("/api/public/defaults/client");
+      if (!res.ok) throw new Error("unavailable");
+      return (await res.json()) as { variant: Variant };
+    },
+    retry: false,
+  });
+
+  const config = isError ? frontPageDefault : data?.frontPage ?? frontPageDefault;
+  const clientVariant = clientQuery.isError ? clientDefault : clientQuery.data?.variant ?? clientDefault;
+
   useEffect(() => {
-    document.title = "Agility Engineers — Moving real ideas to production.";
-  }, []);
+    document.title = config.meta.title;
+  }, [config.meta.title]);
+
+  const onBook = () => openBooking(clientVariant.booking, clientVariant.slug);
 
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-ink)", background: "#fff" }}>
       <FrontHeader />
-      <Hero />
-      <FrontFooter />
+      <Hero config={config} onBook={onBook} />
+      <FrontFooter config={config} />
     </div>
   );
 }
@@ -52,8 +84,8 @@ function FrontHeader() {
 /* ── Hero + the two-path choice ───────────────────────────────────────────────
    Navy aurora band identical to the landing hero: gradient + NetworkBackdrop.
    Holds the eyebrow, headline, subhead, the two path cards, and the standalone
-   client CTA — all above the fold on desktop. */
-function Hero() {
+   client CTA — all above the fold on desktop. All copy comes from the config. */
+function Hero({ config, onBook }: { config: FrontPageConfig; onBook: () => void }) {
   return (
     <section
       className="ae-aurora"
@@ -89,7 +121,7 @@ function Hero() {
           }}
         >
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--color-success)" }} />
-          Agility Engineers
+          {config.eyebrow}
         </div>
 
         {/* Headline + subhead */}
@@ -104,7 +136,7 @@ function Hero() {
             maxWidth: 900,
           }}
         >
-          Moving real ideas to production.
+          {config.headline}
         </h1>
         <p
           style={{
@@ -115,8 +147,7 @@ function Hero() {
             maxWidth: 660,
           }}
         >
-          We help companies design, build, and support software — and we build the teams that do it.
-          Tell us which one you are, and we&rsquo;ll point you the right way.
+          {config.subhead}
         </p>
 
         {/* Two path cards — client first (leads on mobile, sits left on desktop) */}
@@ -129,54 +160,49 @@ function Hero() {
           }}
         >
           <PathCard
-            href="/client"
+            card={config.clientCard}
             accent="navy"
             icon={<Lightbulb size={22} strokeWidth={2.2} />}
-            eyebrow="For CEOs, owners &amp; operators"
-            heading="I have something to build or support"
-            body="You&rsquo;re evaluating a partner to take an idea from proof of concept to live, supported software."
-            action="Explore what we build"
           />
           <PathCard
-            href="/talent"
+            card={config.talentCard}
             accent="teal"
             icon={<Code2 size={22} strokeWidth={2.2} />}
-            eyebrow="For developers, architects &amp; delivery teams"
-            heading="I&rsquo;m a developer or on a delivery team"
-            body="You&rsquo;re joining a project, need team resources, or want to get found for the next one."
-            action="Go to the directory"
           />
         </div>
 
-        {/* Standalone client CTA — the one green action; bypass for ready clients */}
+        {/* Standalone client CTA — the one green action; opens the client scheduler
+            directly (in sync with the client default's booking config). */}
         <div style={{ marginTop: "clamp(28px,4vw,40px)", textAlign: "center" }}>
           <p style={{ font: "600 14px/1.4 var(--font-body)", color: "#d7ecf3" }}>
-            Already know you want to talk?
+            {config.cta.prompt}
           </p>
-          <Link
-            href="/client"
+          <button
+            type="button"
+            onClick={onBook}
             className="ae-cta"
             style={{
               display: "inline-flex",
               alignItems: "center",
               gap: 10,
               marginTop: 12,
+              border: "none",
+              cursor: "pointer",
               background: "var(--color-cta)",
               color: "#fff",
               font: "700 16px/1 var(--font-display)",
               padding: "18px 28px",
               borderRadius: "var(--radius-btn)",
               boxShadow: "0 12px 28px rgba(46,139,87,.4)",
-              textDecoration: "none",
             }}
           >
-            Book a meeting with a client advisor
+            {config.cta.label}
             <span className="ae-arrow" style={{ fontSize: 18 }} aria-hidden>
               &rarr;
             </span>
-          </Link>
+          </button>
           <p style={{ marginTop: 12, font: "500 12.5px/1.5 var(--font-body)", color: "#a9cede" }}>
-            30 minutes &middot; No pitch &middot; Walk away with a plan
+            {config.cta.footnote}
           </p>
         </div>
       </div>
@@ -189,26 +215,18 @@ function Hero() {
    visual affordance (a styled span) — never a nested link — styled as an outline,
    NOT green, so the single green CTA above stays the unambiguous "commit" signal. */
 function PathCard({
-  href,
+  card,
   accent,
   icon,
-  eyebrow,
-  heading,
-  body,
-  action,
 }: {
-  href: string;
+  card: FrontPageCard;
   accent: "navy" | "teal";
   icon: React.ReactNode;
-  eyebrow: string;
-  heading: string;
-  body: string;
-  action: string;
 }) {
   const accentColor = accent === "navy" ? "var(--color-navy)" : "var(--color-teal)";
   return (
     <Link
-      href={href}
+      href={card.href}
       className="ae-lift"
       style={{
         display: "flex",
@@ -244,7 +262,7 @@ function PathCard({
           color: accentColor,
         }}
       >
-        {eyebrow}
+        {card.eyebrow}
       </span>
       <span
         style={{
@@ -255,10 +273,10 @@ function PathCard({
           color: "var(--color-navy)",
         }}
       >
-        {heading}
+        {card.heading}
       </span>
       <span style={{ font: "400 15.5px/1.55 var(--font-body)", color: "var(--color-muted)" }}>
-        {body}
+        {card.body}
       </span>
       <span
         style={{
@@ -274,7 +292,7 @@ function PathCard({
           borderRadius: "var(--radius-btn)",
         }}
       >
-        {action}
+        {card.action}
         <span className="ae-arrow" aria-hidden>
           &rarr;
         </span>
@@ -286,7 +304,7 @@ function PathCard({
 /* ── Footer ───────────────────────────────────────────────────────────────────
    Reuses Footer.tsx's navy-900 band styling and the site tagline / legal row, but
    without the variant-bound qualifier CtaButton. */
-function FrontFooter() {
+function FrontFooter({ config }: { config: FrontPageConfig }) {
   const year = new Date().getFullYear();
   return (
     <footer
@@ -300,7 +318,7 @@ function FrontFooter() {
         <div style={{ maxWidth: 460 }}>
           <Logo treatment="white" />
           <p style={{ marginTop: 16, font: "500 15px/1.6 var(--font-body)", color: "#9fc3d4" }}>
-            From project to product. Moving real ideas to production.
+            {config.footer.tagline}
           </p>
         </div>
         <div
@@ -317,14 +335,14 @@ function FrontFooter() {
         >
           <span>&copy; {year} | Agility Engineers, LLC | All Rights Reserved |</span>
           <a
-            href="https://www.agility-engineers.com/about/terms"
+            href={config.footer.termsUrl}
             style={{ color: "#bcd9e4", textDecoration: "underline" }}
           >
             Terms of Use
           </a>
           <span>|</span>
           <a
-            href="https://www.agility-engineers.com/about/privacy"
+            href={config.footer.privacyUrl}
             style={{ color: "#bcd9e4", textDecoration: "underline" }}
           >
             Privacy Policy

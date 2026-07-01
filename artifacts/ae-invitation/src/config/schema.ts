@@ -295,6 +295,46 @@ export const variantSchema = z.object({
 });
 export type Variant = z.infer<typeof variantSchema>;
 
+/* ── Front page (the public site router at /) ─────────────────────────────────
+ * The site's front page is a singleton content record — NOT a variant (the
+ * variant schema is landing-page shaped and templateType is client|talent). It
+ * routes visitors to /client or /talent and offers a standalone "book a meeting"
+ * CTA. Stored in the `site_content` table under key 'frontpage' and edited in the
+ * admin CMS like a variant. The CTA's scheduler destination is intentionally NOT
+ * stored here — it resolves live from the client default's booking config so the
+ * two always stay in sync. */
+
+export const frontPageCardSchema = z.object({
+  eyebrow: z.string(),
+  heading: z.string(),
+  body: z.string(),
+  action: z.string(),
+  href: z.string().default("/client"),
+});
+export type FrontPageCard = z.infer<typeof frontPageCardSchema>;
+
+export const frontPageSchema = z.object({
+  meta: z
+    .object({ title: z.string().default("Agility Engineers — Moving real ideas to production.") })
+    .default({}),
+  eyebrow: z.string().default("Agility Engineers"),
+  headline: z.string(),
+  subhead: z.string(),
+  clientCard: frontPageCardSchema,
+  talentCard: frontPageCardSchema,
+  cta: z.object({
+    prompt: z.string(),
+    label: z.string(),
+    footnote: z.string(),
+  }),
+  footer: z.object({
+    tagline: z.string(),
+    termsUrl: z.string().url().default("https://www.agility-engineers.com/about/terms"),
+    privacyUrl: z.string().url().default("https://www.agility-engineers.com/about/privacy"),
+  }),
+});
+export type FrontPage = z.infer<typeof frontPageSchema>;
+
 /* ── AI request shape (admin picks provider per generation) ──────────────── */
 
 export const providerSchema = z.enum(["anthropic", "openai"]);

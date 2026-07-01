@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { defaultVariants } from "@/config/defaults";
+import { defaultVariants, frontPageDefault } from "@/config/defaults";
 
 /**
  * Schema-at-first-use bootstrap. Applies the schema (idempotent) then seeds
@@ -49,6 +49,13 @@ CREATE TABLE IF NOT EXISTS leads (
 CREATE INDEX IF NOT EXISTS leads_variant_idx ON leads (variant_slug);
 CREATE INDEX IF NOT EXISTS leads_created_idx ON leads (created_at DESC);
 CREATE INDEX IF NOT EXISTS leads_tier_idx ON leads (tier);
+
+-- Singleton site content (front page copy, etc.), keyed by a stable string.
+CREATE TABLE IF NOT EXISTS site_content (
+  key        TEXT PRIMARY KEY,
+  config     JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
 `;
 
 export async function applySchemaAndSeed(): Promise<void> {
@@ -67,6 +74,12 @@ export async function applySchemaAndSeed(): Promise<void> {
       ],
     );
   }
+  await query(
+    `INSERT INTO site_content (key, config)
+     VALUES ('frontpage', $1::jsonb)
+     ON CONFLICT (key) DO NOTHING`,
+    [JSON.stringify(frontPageDefault)],
+  );
   console.log("[bootstrap] schema applied and defaults seeded.");
 }
 

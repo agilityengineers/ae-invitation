@@ -23,3 +23,4 @@ export function defaultForTemplate(templateType: TemplateType): Variant {
 }
 
 export { clientDefault, talentDefault };
+export { frontPageDefault } from "@/config/defaults/frontpage";

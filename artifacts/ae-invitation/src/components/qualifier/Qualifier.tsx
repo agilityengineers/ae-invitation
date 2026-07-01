@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Variant } from "@/config/schema";
 import { score, resolveRouting, type Routing, type Tier } from "@/lib/scoring";
+import { openBooking } from "@/lib/booking";
 
 /**
  * Interactive multi-step qualifier (modal): questions → lead capture → scoring
@@ -88,15 +89,7 @@ export function Qualifier({ variant, onClose }: { variant: Variant; onClose: () 
   function openScheduler() {
     const r = result?.routing;
     if (!r) return;
-    if (r.bookingMode === "embed") {
-      window.location.href = `/book/${r.bookingSlug}`;
-      return;
-    }
-    if (r.bookingUrl) window.open(r.bookingUrl, "_blank", "noopener");
-    else
-      alert(
-        "Scheduler not configured yet. An admin can add a Calendly or SmartScheduler link in the page admin.",
-      );
+    openBooking({ mode: r.bookingMode, url: r.bookingUrl }, r.bookingSlug);
   }
 
   const ctaLabel = talent ? "Complete my directory profile →" : "Book your Agility Assessment →";
