@@ -1,4 +1,5 @@
 import { Pool, type PoolClient, type PoolConfig, type QueryResult, type QueryResultRow } from "pg";
+import { logger } from "@/lib/logger";
 
 /**
  * Postgres connection pool singleton (node-postgres), mirroring
@@ -38,13 +39,21 @@ function createPool(): Pool {
   if (!connectionString) {
     throw new Error("DATABASE_URL is not set — the database is required for configs and leads.");
   }
-  return new Pool({
+  const pool = new Pool({
     connectionString,
     ssl: resolveSsl(connectionString),
     max: Number(process.env.PG_POOL_MAX ?? 10),
     idleTimeoutMillis: Number(process.env.PG_POOL_IDLE_TIMEOUT_MS ?? 30_000),
     connectionTimeoutMillis: Number(process.env.PG_POOL_CONNECTION_TIMEOUT_MS ?? 10_000),
   });
+  // pg-pool emits 'error' on idle clients that lose their connection (e.g. a DB
+  // restart); without a listener, Node treats it as an unhandled error and
+  // crashes the whole process — taking every route down, not just the one
+  // hitting the DB at that moment.
+  pool.on("error", (err) => {
+    logger.error({ err }, "Postgres pool idle client error");
+  });
+  return pool;
 }
 
 export function getPool(): Pool {

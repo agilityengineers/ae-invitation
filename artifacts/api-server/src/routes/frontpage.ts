@@ -1,13 +1,19 @@
 import { Router, type IRouter } from "express";
 import { requireAuth, sameOrigin } from "@/middlewares/guards";
 import { frontPageSchema } from "@/config/schema";
+import { frontPageDefault } from "@/config/defaults";
 import { getFrontPage, saveFrontPage } from "@/lib/config";
 
 const router: IRouter = Router();
 
-/** GET — the current front-page config (admin editor). */
+/**
+ * GET — the current front-page config (admin editor). Falls back to the
+ * bundled default on a DB error (matches `/public/frontpage`'s resilience)
+ * so the editor always has content to open with.
+ */
 router.get("/frontpage", requireAuth, async (_req, res) => {
-  res.json({ frontPage: await getFrontPage() });
+  const frontPage = await getFrontPage().catch(() => frontPageDefault);
+  res.json({ frontPage });
 });
 
 /** PATCH — save the front-page config (admin edit). */
