@@ -17,8 +17,14 @@ CREATE TABLE IF NOT EXISTS variants (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- The generic page served at /client and /talent. At most one default per type
+-- (partial unique index); independent of `published`.
+ALTER TABLE variants ADD COLUMN IF NOT EXISTS is_default BOOLEAN NOT NULL DEFAULT FALSE;
+
 CREATE INDEX IF NOT EXISTS variants_published_idx ON variants (published);
 CREATE INDEX IF NOT EXISTS variants_template_idx ON variants (template_type);
+CREATE UNIQUE INDEX IF NOT EXISTS variants_one_default_per_type
+  ON variants (template_type) WHERE is_default;
 
 -- Captured leads from the qualifier. Full payload retained for auditability and
 -- to mirror what the Zapier outbound webhook fans out.

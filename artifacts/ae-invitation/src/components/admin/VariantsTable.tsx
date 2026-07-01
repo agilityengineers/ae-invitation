@@ -8,6 +8,7 @@ interface Row {
   label: string;
   templateType: string;
   published: boolean;
+  isDefault: boolean;
   updatedAt: string;
 }
 
@@ -15,7 +16,7 @@ export function VariantsTable({ initial }: { initial: Row[] }) {
   const [rows, setRows] = useState(initial);
   const [busy, setBusy] = useState<string | null>(null);
 
-  async function act(slug: string, action: "publish" | "unpublish" | "delete") {
+  async function act(slug: string, action: "publish" | "unpublish" | "delete" | "markDefault") {
     if (action === "delete" && !confirm(`Delete "${slug}"? This cannot be undone.`)) return;
     setBusy(slug);
     try {
@@ -25,8 +26,21 @@ export function VariantsTable({ initial }: { initial: Row[] }) {
         body: JSON.stringify({ slug, action }),
       });
       if (!res.ok) throw new Error("Action failed");
-      if (action === "delete") setRows((r) => r.filter((x) => x.slug !== slug));
-      else setRows((r) => r.map((x) => (x.slug === slug ? { ...x, published: action === "publish" } : x)));
+      if (action === "delete") {
+        setRows((r) => r.filter((x) => x.slug !== slug));
+      } else if (action === "markDefault") {
+        // Exactly one default per template type: clear the flag on same-type rows.
+        const type = rows.find((x) => x.slug === slug)?.templateType;
+        setRows((r) =>
+          r.map((x) =>
+            x.templateType === type ? { ...x, isDefault: x.slug === slug } : x,
+          ),
+        );
+      } else {
+        setRows((r) =>
+          r.map((x) => (x.slug === slug ? { ...x, published: action === "publish" } : x)),
+        );
+      }
     } catch {
       alert("That action failed. Please try again.");
     } finally {
@@ -64,9 +78,19 @@ export function VariantsTable({ initial }: { initial: Row[] }) {
                 <span className="rounded-full bg-bg-alt px-2.5 py-1 text-xs font-semibold capitalize text-navy">{r.templateType}</span>
               </td>
               <td className="px-4 py-3">
-                <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${r.published ? "bg-green-100 text-cta" : "bg-amber-100 text-amber-700"}`}>
-                  {r.published ? "Published" : "Draft"}
-                </span>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className={`rounded-full px-2.5 py-1 text-xs font-bold ${r.published ? "bg-green-100 text-cta" : "bg-amber-100 text-amber-700"}`}>
+                    {r.published ? "Published" : "Draft"}
+                  </span>
+                  {r.isDefault && (
+                    <span
+                      className="rounded-full bg-teal/10 px-2.5 py-1 text-xs font-bold text-teal"
+                      title={`Served at /${r.templateType === "talent" ? "talent" : "client"}`}
+                    >
+                      Default
+                    </span>
+                  )}
+                </div>
               </td>
               <td className="px-4 py-3">
                 <div className="flex flex-wrap items-center gap-3 text-sm font-semibold">
@@ -77,6 +101,11 @@ export function VariantsTable({ initial }: { initial: Row[] }) {
                   <button onClick={() => act(r.slug, r.published ? "unpublish" : "publish")} disabled={busy === r.slug} className="text-navy underline disabled:opacity-50">
                     {r.published ? "Unpublish" : "Publish"}
                   </button>
+                  {!r.isDefault && (
+                    <button onClick={() => act(r.slug, "markDefault")} disabled={busy === r.slug} className="text-navy underline disabled:opacity-50">
+                      Set as default
+                    </button>
+                  )}
                   <button onClick={() => act(r.slug, "delete")} disabled={busy === r.slug} className="text-red-600 underline disabled:opacity-50">
                     Delete
                   </button>

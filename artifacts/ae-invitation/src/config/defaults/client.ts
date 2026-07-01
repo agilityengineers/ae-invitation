@@ -14,6 +14,7 @@ export const clientDefault: Variant = {
   slug: "default-client",
   label: "Client Target — default",
   published: false,
+  isDefault: false,
   targeting: {
     industry: "",
     title: "CEOs, owners & operators",

@@ -136,10 +136,15 @@ details[open] .ae-faqplus {
   transition: transform 0.4s cubic-bezier(0.2, 0.7, 0.2, 1),
     box-shadow 0.4s cubic-bezier(0.2, 0.7, 0.2, 1), border-color 0.4s;
 }
-.ae-lift:hover {
+.ae-lift:hover,
+.ae-lift:focus-visible {
   transform: translateY(-8px);
   box-shadow: 0 24px 54px rgba(8, 82, 127, 0.18);
   border-color: #9fd3df;
+}
+.ae-lift:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
 }
 
 /* CTA sheen + lift */

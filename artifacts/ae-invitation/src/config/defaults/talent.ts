@@ -14,6 +14,7 @@ export const talentDefault: Variant = {
   slug: "default-talent",
   label: "Talent / Directory — default",
   published: false,
+  isDefault: false,
   targeting: {
     role: "developers, architects, PMs & delivery teams",
     discipline: "",

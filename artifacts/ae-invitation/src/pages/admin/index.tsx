@@ -8,6 +8,7 @@ interface VariantSummary {
   label: string;
   templateType: string;
   published: boolean;
+  isDefault?: boolean;
   updatedAt?: string | null;
 }
 
@@ -44,6 +45,7 @@ export default function AdminHome() {
               label: v.label,
               templateType: v.templateType,
               published: v.published,
+              isDefault: v.isDefault ?? false,
               updatedAt: v.updatedAt ?? "",
             }))}
           />
