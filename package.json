@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "description": "Agility Engineers landing-page generator — Client Target + Talent/Directory StoryBrand templates",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -60,6 +60,25 @@ node .next/standalone/server.js   # ensure db/schema.sql + public/ + .next/stati
 On-demand ISR: publishing/editing a variant calls `revalidatePath`, so changes go live
 without a redeploy. New slugs render on first request and are cached thereafter.
 
+## Replit (dev + production)
+The repo ships a `.replit` (Node 20 + Postgres 16 modules, port 3000→80, deployment build/run).
+
+1. **Import** the GitHub repo into Replit.
+2. **Database:** add Replit's built-in PostgreSQL (Tools → PostgreSQL). It injects `DATABASE_URL`
+   automatically; the app auto-negotiates TLS for it (managed hosts get SSL, localhost doesn't —
+   override with `DATABASE_SSL=true|false` if ever needed).
+3. **Secrets:** set `ADMIN_PASSWORD`, `NEXT_PUBLIC_SITE_URL`, and any of `ANTHROPIC_API_KEY` /
+   `OPENAI_API_KEY`, the `AWS_*` S3 vars, and `ZAPIER_WEBHOOK_URL` in the Secrets pane.
+4. **Dev:** press **Run** (`npm run dev`); the schema + demo variants self-seed on first request.
+5. **Deploy:** use a **Reserved VM** deployment (build `npm ci && npm run build`, run `npm run start`).
+   Reserved VM is the right target because the app uses on-demand ISR (`revalidatePath`) and an
+   in-memory rate limiter — a single persistent instance keeps published pages fresh. Avoid
+   Autoscale (multiple instances would serve stale pages after a publish); only move to it if you
+   first swap in a shared cache/rate-limiter.
+
+No runtime filesystem writes are performed (configs live in Postgres, images in S3), so the
+ephemeral deploy filesystem is not a problem.
+
 ## First run
 The seed includes two unpublished templates (`default-client`, `default-talent`) and two
 published demos (`/specialty-insurance-leaders`, `/backend-engineers`). Log in at `/admin`,
