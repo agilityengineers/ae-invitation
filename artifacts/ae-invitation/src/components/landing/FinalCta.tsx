@@ -45,8 +45,8 @@ export function FinalCta({ variant, separator }: { variant: Variant; separator?:
         </Reveal>
 
         <Reveal delay={1} style={{ minWidth: 0 }}>
-          <div style={{ background: "#fff", color: "#0B2A38", borderRadius: 20, padding: "30px 28px", boxShadow: "0 30px 60px rgba(0,0,0,.3)" }}>
-            <h3 style={{ font: "800 22px/1.25 var(--font-display)", color: "#08527F" }}>{c.cardHeading}</h3>
+          <div style={{ background: "#fff", color: "#0B2A38", borderRadius: 20, padding: "clamp(24px,5vw,30px) clamp(20px,5vw,28px)", boxShadow: "0 30px 60px rgba(0,0,0,.3)" }}>
+            <h3 style={{ font: "800 clamp(20px,2.6vw,22px)/1.25 var(--font-display)", color: "#08527F" }}>{c.cardHeading}</h3>
             <p style={{ marginTop: 10, font: "500 14.5px/1.6 var(--font-body)", color: "#5A6B73" }}>{c.cardSubhead}</p>
             <CtaButton
               arrowBob

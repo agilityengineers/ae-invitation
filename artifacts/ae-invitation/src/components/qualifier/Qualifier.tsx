@@ -267,7 +267,7 @@ function Field({ label, type = "text", value, placeholder, onChange }: { label: 
         value={value}
         placeholder={placeholder}
         onChange={(e) => onChange(e.target.value)}
-        style={{ width: "100%", padding: "12px 13px", border: "1px solid #C4D2D9", borderRadius: 9, font: "500 15px var(--font-body)", color: C.ink }}
+        style={{ width: "100%", padding: "12px 13px", border: "1px solid #C4D2D9", borderRadius: 9, font: "500 16px var(--font-body)", color: C.ink }}
       />
     </div>
   );

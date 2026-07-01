@@ -34,7 +34,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </p>
           <p className="mt-1 font-display text-sm font-bold text-navy">Page admin</p>
         </div>
-        <nav className="flex gap-1 px-3 pb-4 md:flex-col">
+        <nav className="flex flex-wrap gap-1 px-3 pb-4 md:flex-col md:flex-nowrap">
           <Link className="rounded-lg px-3 py-2 text-sm font-semibold text-ink hover:bg-bg-alt" href="/admin">
             Pages
           </Link>
