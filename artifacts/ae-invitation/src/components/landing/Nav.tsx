@@ -1,5 +1,5 @@
 import type { Variant } from "@/config/schema";
-import { Logo } from "@/components/landing/Logo";
+import { Logo, HEADER_LOGO_SIZE } from "@/components/landing/Logo";
 import { CtaButton } from "@/components/landing/CtaButton";
 
 /**
@@ -26,7 +26,7 @@ export function Nav({ variant }: { variant: Variant }) {
       >
         {/* Header sits on a white bar, so the logo is always the chip treatment;
             the footer.logo setting governs the dark footer's treatment. */}
-        <Logo treatment="chip" />
+        <Logo treatment="chip" size={HEADER_LOGO_SIZE} />
         <nav className="ae-navlinks" style={{ display: "flex", alignItems: "center", gap: 22 }}>
           {links.map((l, i) => (
             <a key={i} className="ae-nav" href={l.url || "#"}>

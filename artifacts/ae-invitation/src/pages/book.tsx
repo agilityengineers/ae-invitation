@@ -1,7 +1,7 @@
 import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import type { Variant } from "@/config/schema";
-import { Logo } from "@/components/landing/Logo";
+import { Logo, HEADER_LOGO_SIZE } from "@/components/landing/Logo";
 import { EmbedHost } from "@/components/booking/EmbedHost";
 import NotFound from "@/pages/not-found";
 
@@ -32,7 +32,7 @@ export default function BookPage() {
     <main style={{ minHeight: "100vh", background: "#fff", fontFamily: "var(--font-body)" }}>
       <div style={{ background: "#fff", borderBottom: "1px solid var(--color-line)" }}>
         <header style={{ maxWidth: 980, margin: "0 auto", padding: "14px clamp(16px,4vw,40px)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Logo treatment="chip" />
+          <Logo treatment="chip" size={HEADER_LOGO_SIZE} />
           <Link href={`/${slug}`} className="ae-nav">
             ← Back to the page
           </Link>
