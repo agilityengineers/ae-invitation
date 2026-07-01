@@ -35,7 +35,7 @@ export function Proof({ variant, separator }: { variant: Variant; separator?: st
     </Reveal>
   ) : (
     <Reveal delay={1} style={{ minWidth: 0, display: "grid", gap: 16 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 16 }}>
         {p.metrics.map((m, i) => (
           <div key={i} style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.14)", borderRadius: 16, padding: "22px 20px" }}>
             <div style={{ font: "800 clamp(26px,3vw,38px)/1 var(--font-display)", color: "#5FE0A0" }}>{m.num}</div>

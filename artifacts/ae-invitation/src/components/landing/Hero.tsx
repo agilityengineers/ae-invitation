@@ -131,7 +131,7 @@ export function Hero({ variant, separator }: { variant: Variant; separator?: str
             </div>
             {h.badge && (
               <div
-                className="ae-float"
+                className="ae-float ae-hero-badge"
                 style={{
                   position: "absolute",
                   bottom: -56,

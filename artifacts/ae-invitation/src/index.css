@@ -206,11 +206,54 @@ details[open] .ae-faqplus {
 .ae-nav:hover::after { right: 0; }
 .ae-logo { transition: transform 0.25s ease; }
 .ae-logo:hover { transform: translateY(-1px) scale(1.02); }
-@media (max-width: 720px) { .ae-navlinks { display: none; } }
+
+/* header nav: inline links on desktop, hamburger dropdown on mobile */
+.ae-navlinks { display: flex; align-items: center; gap: 22px; }
+.ae-navtoggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-navy);
+  cursor: pointer;
+}
+.ae-navmenu { display: none; }
+.ae-navmenu-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 8px clamp(16px, 4vw, 56px) 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid var(--color-line);
+}
+.ae-navmenu-link {
+  color: var(--color-navy);
+  text-decoration: none;
+  font: 600 16px/1 var(--font-display);
+  padding: 14px 4px;
+}
+.ae-navmenu-link:hover { color: var(--color-teal); }
+@media (max-width: 720px) {
+  .ae-navlinks { display: none; }
+  .ae-navtoggle { display: inline-flex; }
+  .ae-navmenu { display: block; }
+}
 
 /* hero media vertical alignment */
 .ae-hero-media { align-self: center; }
 @media (min-width: 760px) { .ae-hero-media { align-self: start; margin-top: 50px; } }
+
+/* hero floating badge — pull it inside the frame on small screens so the section's
+   overflow:hidden doesn't clip its left edge */
+@media (max-width: 720px) {
+  .ae-hero-badge { left: 0 !important; right: auto; max-width: calc(100% - 8px); }
+}
 
 /* scroll-reveal — only when supported; otherwise content stays visible */
 @media (prefers-reduced-motion: no-preference) {

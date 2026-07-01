@@ -50,7 +50,7 @@ export function Guide({ variant, separator }: { variant: Variant; separator?: st
           </Reveal>
         ) : (
           <Reveal delay={1} style={{ minWidth: 0, display: "grid", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(140px,1fr))", gap: 16 }}>
               {[g.stat1, g.stat2].map((s, i) => (
                 <div key={i} className="ae-lift" style={{ background: "#F2F5F7", border: "1px solid var(--color-line)", borderRadius: 16, padding: "22px 20px" }}>
                   <div style={{ font: "800 clamp(28px,3vw,40px)/1 var(--font-display)", color: "#0F88A2" }}>{s.num}</div>
