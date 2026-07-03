@@ -70,7 +70,10 @@ function Intro() {
           zIndex: 1,
           maxWidth: 1180,
           margin: "0 auto",
-          padding: "clamp(36px,4.5vw,60px) clamp(16px,4vw,56px)",
+          // Top padding reserves room for the immersive header floating over
+          // this band (see HeaderShell in Nav.tsx).
+          padding:
+            "calc(var(--ae-header-h) + clamp(20px,3.5vw,36px)) clamp(16px,4vw,56px) clamp(36px,4.5vw,60px)",
         }}
       >
         <div

@@ -53,6 +53,15 @@ export function visibleSections(sections: Sections): SectionKey[] {
 }
 
 /**
+ * Whether a section opens on a dark band. The immersive header floats
+ * transparently over dark first sections and falls back to its solid bar when
+ * the page starts light (e.g. hero toggled off).
+ */
+export function sectionStartsDark(key: SectionKey): boolean {
+  return lum(TONES[key].top) < 0.6;
+}
+
+/**
  * Returns a map of sectionKey -> CSS border-top value for sections that need a
  * separator because the section above shares a near-identical bottom tone.
  */
