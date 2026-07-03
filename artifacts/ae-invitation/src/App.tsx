@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import FrontPage from "@/components/frontpage/FrontPage";
 import ClientPage from "@/pages/client";
 import TalentPage from "@/pages/talent";
+import ProjectsPage from "@/pages/projects";
 import LandingRoute from "@/pages/landing";
 import BookPage from "@/pages/book";
 import PreviewPage from "@/pages/preview";
@@ -31,6 +32,8 @@ function Router() {
       <Route path="/" component={FrontPage} />
       <Route path="/client" component={ClientPage} />
       <Route path="/talent" component={TalentPage} />
+      {/* Must stay above the /:slug catch-all so /projects never resolves as a landing slug. */}
+      <Route path="/projects" component={ProjectsPage} />
       <Route path="/admin/login" component={LoginPage} />
       <Route path="/admin/new" component={NewPage} />
       <Route path="/admin/leads" component={LeadsPage} />
