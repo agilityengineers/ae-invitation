@@ -182,6 +182,47 @@ details[open] .ae-faqplus {
 .ae-ring.ae-ring2::before { animation-delay: 1s; }
 .ae-ring.ae-ring3::before { animation-delay: 2s; }
 
+/* ── Immersive header ─────────────────────────────────────────────────────────
+   The header owns no white bar: it floats transparently over the page's opening
+   dark band (aurora hero) and condenses into a frosted deep-navy strip once the
+   page scrolls — or immediately, on pages that open on a light section. The
+   negative overlay margin lets the band below slide up behind the bar so the
+   logo/nav sit inside the brand gradient rather than on a separate surface. */
+:root {
+  --ae-header-h: 68px;
+}
+.ae-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: transparent;
+  border-bottom: 1px solid transparent;
+  transition: background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.ae-header--overlay {
+  margin-bottom: calc(-1 * var(--ae-header-h));
+}
+.ae-header--solid {
+  background: rgba(6, 42, 63, 0.85);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(4, 41, 63, 0.3);
+}
+
+/* nav pieces recolor for the header's dark surface */
+.ae-header .ae-nav { color: rgba(255, 255, 255, 0.92); }
+.ae-header .ae-nav:hover { color: var(--color-teal-bright); }
+.ae-header .ae-nav::after { background: var(--color-teal-bright); }
+.ae-header .ae-navtoggle {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.28);
+  color: #fff;
+}
+.ae-header .ae-navmenu-inner { border-top-color: rgba(255, 255, 255, 0.12); }
+.ae-header .ae-navmenu-link { color: rgba(255, 255, 255, 0.92); }
+.ae-header .ae-navmenu-link:hover { color: var(--color-teal-bright); }
+
 /* header nav links */
 .ae-nav {
   position: relative;

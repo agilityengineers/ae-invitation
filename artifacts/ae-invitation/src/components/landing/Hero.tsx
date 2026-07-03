@@ -29,7 +29,10 @@ export function Hero({ variant, separator }: { variant: Variant; separator?: str
           position: "relative",
           maxWidth: 1180,
           margin: "0 auto",
-          padding: "clamp(24px,3.5vw,46px) clamp(16px,4vw,56px) clamp(40px,5vw,72px)",
+          // Top padding reserves room for the immersive header floating over
+          // this band (see HeaderShell in Nav.tsx).
+          padding:
+            "calc(var(--ae-header-h) + clamp(20px,3vw,42px)) clamp(16px,4vw,56px) clamp(40px,5vw,72px)",
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
           gap: "clamp(32px,5vw,64px)",

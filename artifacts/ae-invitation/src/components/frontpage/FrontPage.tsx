@@ -6,6 +6,7 @@ import type { FrontPage as FrontPageConfig, FrontPageCard, Variant } from "@/con
 import { frontPageDefault, clientDefault } from "@/config/defaults";
 import { openBooking } from "@/lib/booking";
 import { Logo, HEADER_LOGO_SIZE } from "@/components/landing/Logo";
+import { HeaderShell } from "@/components/landing/Nav";
 import { NetworkBackdrop } from "@/components/landing/NetworkBackdrop";
 
 /**
@@ -59,13 +60,14 @@ export default function FrontPage() {
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────────
-   Reuses Nav.tsx's exact white-bar wrapper geometry: logo plus optional in-app
-   nav links (styled with the shared .ae-nav underline treatment), but no
-   conversion CTA. Exported so sibling static pages (e.g. /projects) share the
-   same header. */
+   Reuses Nav.tsx's immersive HeaderShell and inner geometry: white-treatment
+   logo plus optional in-app nav links (styled with the shared .ae-nav underline
+   treatment), but no conversion CTA. It floats transparently over the page's
+   opening aurora band and turns frosted navy on scroll. Exported so sibling
+   static pages (e.g. /projects) share the same header. */
 export function FrontHeader({ links = [] }: { links?: { label: string; href: string }[] }) {
   return (
-    <div style={{ background: "#fff", borderBottom: "1px solid var(--color-line)" }}>
+    <HeaderShell>
       <header
         style={{
           maxWidth: 1180,
@@ -77,7 +79,7 @@ export function FrontHeader({ links = [] }: { links?: { label: string; href: str
           gap: 16,
         }}
       >
-        <Logo treatment="chip" size={HEADER_LOGO_SIZE} />
+        <Logo treatment="white" size={HEADER_LOGO_SIZE} />
         {links.length > 0 && (
           <nav style={{ display: "flex", alignItems: "center", gap: 22 }}>
             {links.map((l) => (
@@ -88,7 +90,7 @@ export function FrontHeader({ links = [] }: { links?: { label: string; href: str
           </nav>
         )}
       </header>
-    </div>
+    </HeaderShell>
   );
 }
 
@@ -114,7 +116,10 @@ function Hero({ config, onBook }: { config: FrontPageConfig; onBook: () => void 
           zIndex: 1,
           maxWidth: 1180,
           margin: "0 auto",
-          padding: "clamp(40px,5vw,72px) clamp(16px,4vw,56px)",
+          // Top padding reserves room for the immersive header floating over
+          // this band (see HeaderShell in Nav.tsx).
+          padding:
+            "calc(var(--ae-header-h) + clamp(24px,4vw,48px)) clamp(16px,4vw,56px) clamp(40px,5vw,72px)",
         }}
       >
         {/* Eyebrow */}
