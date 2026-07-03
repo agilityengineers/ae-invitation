@@ -24,3 +24,4 @@ export function defaultForTemplate(templateType: TemplateType): Variant {
 
 export { clientDefault, talentDefault };
 export { frontPageDefault } from "@/config/defaults/frontpage";
+export { projectsDefault } from "@/config/defaults/projects";

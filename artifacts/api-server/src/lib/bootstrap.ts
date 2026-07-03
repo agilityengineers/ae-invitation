@@ -1,5 +1,5 @@
 import { query } from "@/lib/db";
-import { defaultVariants, frontPageDefault } from "@/config/defaults";
+import { defaultVariants, frontPageDefault, projectsDefault } from "@/config/defaults";
 
 /**
  * Schema-at-first-use bootstrap. Applies the schema (idempotent) then seeds
@@ -79,6 +79,12 @@ export async function applySchemaAndSeed(): Promise<void> {
      VALUES ('frontpage', $1::jsonb)
      ON CONFLICT (key) DO NOTHING`,
     [JSON.stringify(frontPageDefault)],
+  );
+  await query(
+    `INSERT INTO site_content (key, config)
+     VALUES ('projects', $1::jsonb)
+     ON CONFLICT (key) DO NOTHING`,
+    [JSON.stringify(projectsDefault)],
   );
   console.log("[bootstrap] schema applied and defaults seeded.");
 }

@@ -335,6 +335,41 @@ export const frontPageSchema = z.object({
 });
 export type FrontPage = z.infer<typeof frontPageSchema>;
 
+/* ── Projects portfolio (singleton in `site_content`, key 'projects') ─────────
+ * The public /projects page: an intro band plus a grid of shipped-app cards.
+ * Stored and edited exactly like the front page (one JSON object in
+ * `site_content`, admin-edited at /admin/projects), so the portfolio is managed
+ * without a developer or redeploy. Image fields are loose strings (URL or
+ * /assets path), matching the heroMedia.imageUrl convention. */
+
+export const projectSchema = z.object({
+  /** Stable id — React key + S3 upload namespace for the screenshot. */
+  id: z.string().default(""),
+  name: z.string().default(""),
+  blurb: z.string().default(""),
+  screenshot: z.string().default(""),
+  screenshotAlt: z.string().default(""),
+  url: z.string().default(""),
+  tags: z.array(z.string()).default([]),
+});
+export type Project = z.infer<typeof projectSchema>;
+
+export const projectsPageSchema = z.object({
+  intro: z
+    .object({
+      eyebrow: z.string().default("Shipped & in production"),
+      headline: z.string().default("Software we've moved to production."),
+      subhead: z
+        .string()
+        .default(
+          "These are real applications Agility Engineers designed, built, and launched for clients — live, supported, and doing work every day. Browse the projects below and click any card to open the live application.",
+        ),
+    })
+    .default({}),
+  items: z.array(projectSchema).default([]),
+});
+export type ProjectsPage = z.infer<typeof projectsPageSchema>;
+
 /* ── AI request shape (admin picks provider per generation) ──────────────── */
 
 export const providerSchema = z.enum(["anthropic", "openai"]);
