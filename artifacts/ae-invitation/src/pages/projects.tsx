@@ -1,17 +1,32 @@
 import { useEffect } from "react";
-import { frontPageDefault } from "@/config/defaults";
-import { projects, type Project } from "@/config/projects";
+import { useQuery } from "@tanstack/react-query";
+import type { ProjectsPage as ProjectsPageConfig, Project } from "@/config/schema";
+import { frontPageDefault, projectsDefault } from "@/config/defaults";
 import { FrontHeader, FrontFooter } from "@/components/frontpage/FrontPage";
 import { NetworkBackdrop } from "@/components/landing/NetworkBackdrop";
 
 /**
- * Public portfolio page (/projects). A static showcase of production software
- * Agility Engineers has shipped: an intro band framing the page, then one card
- * per entry in `projects` (src/config/projects.ts) linking out to the live app.
- * Reuses the front page's header/footer, brand tokens, and `.ae-*` classes so
- * it reads as a native section of the site.
+ * Public portfolio page (/projects). A showcase of production software Agility
+ * Engineers has shipped: an intro band framing the page, then one card per
+ * project linking out to the live app. The content is admin-managed — it fetches
+ * the portfolio config (falling back to the bundled `projectsDefault`), the same
+ * way the front page fetches its config, so admins keep it current from
+ * /admin/projects. Reuses the front page's header/footer, brand tokens, and
+ * `.ae-*` classes so it reads as a native section of the site.
  */
 export default function ProjectsPage() {
+  const { data, isError } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const res = await fetch("/api/public/projects");
+      if (!res.ok) throw new Error("unavailable");
+      return (await res.json()) as { projects: ProjectsPageConfig };
+    },
+    retry: false,
+  });
+
+  const config = isError ? projectsDefault : data?.projects ?? projectsDefault;
+
   useEffect(() => {
     document.title = "Our Work — Agility Engineers";
   }, []);
@@ -19,7 +34,7 @@ export default function ProjectsPage() {
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-ink)", background: "#fff" }}>
       <FrontHeader links={[{ label: "Home", href: "/" }, { label: "Our Work", href: "/projects" }]} />
-      <Intro />
+      <Intro intro={config.intro} />
       <main
         style={{
           maxWidth: 1180,
@@ -37,8 +52,8 @@ export default function ProjectsPage() {
             gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
           }}
         >
-          {projects.map((project) => (
-            <li key={project.name} style={{ display: "flex" }}>
+          {config.items.map((project, i) => (
+            <li key={project.id || project.name || i} style={{ display: "flex" }}>
               <ProjectCard project={project} />
             </li>
           ))}
@@ -51,8 +66,9 @@ export default function ProjectsPage() {
 
 /* ── Intro band ───────────────────────────────────────────────────────────────
    Same navy aurora treatment as the front-page hero (gradient + NetworkBackdrop),
-   scaled down: eyebrow pill, headline, and one framing paragraph. */
-function Intro() {
+   scaled down: eyebrow pill, headline, and one framing paragraph. Copy is
+   admin-editable, passed in from the portfolio config. */
+function Intro({ intro }: { intro: ProjectsPageConfig["intro"] }) {
   return (
     <section
       className="ae-aurora"
@@ -90,7 +106,7 @@ function Intro() {
           }}
         >
           <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--color-success)" }} />
-          Shipped &amp; in production
+          {intro.eyebrow}
         </div>
         <h1
           style={{
@@ -103,7 +119,7 @@ function Intro() {
             maxWidth: 820,
           }}
         >
-          Software we&apos;ve moved to production.
+          {intro.headline}
         </h1>
         <p
           style={{
@@ -114,9 +130,7 @@ function Intro() {
             maxWidth: 660,
           }}
         >
-          These are real applications Agility Engineers designed, built, and launched for
-          clients — live, supported, and doing work every day. Browse the projects below and
-          click any card to open the live application.
+          {intro.subhead}
         </p>
       </div>
     </section>
@@ -148,7 +162,7 @@ function ProjectCard({ project }: { project: Project }) {
       }}
     >
       <img
-        src={project.screenshot}
+        src={project.screenshot || "/assets/hero-placeholder.png"}
         alt={project.screenshotAlt}
         loading="lazy"
         decoding="async"

@@ -1,7 +1,14 @@
 import { query, withClient } from "@/lib/db";
 import { ensureReady } from "@/lib/bootstrap";
-import { variantSchema, frontPageSchema, type Variant, type FrontPage } from "@/config/schema";
-import { frontPageDefault } from "@/config/defaults";
+import {
+  variantSchema,
+  frontPageSchema,
+  projectsPageSchema,
+  type Variant,
+  type FrontPage,
+  type ProjectsPage,
+} from "@/config/schema";
+import { frontPageDefault, projectsDefault } from "@/config/defaults";
 
 type TemplateType = Variant["templateType"];
 
@@ -182,4 +189,31 @@ export async function saveFrontPage(input: FrontPage): Promise<FrontPage> {
     [JSON.stringify(frontPage)],
   );
   return frontPageSchema.parse(rows[0].config);
+}
+
+/* ── Projects portfolio (singleton in `site_content`, key 'projects') ────────
+ * Same validate-on-read/write discipline and default fallback as the front page,
+ * so the public /projects page never dead-ends. */
+
+export async function getProjects(): Promise<ProjectsPage> {
+  await ensureReady();
+  const { rows } = await query<{ config: unknown }>(
+    "SELECT config FROM site_content WHERE key = 'projects'",
+  );
+  if (!rows[0]) return projectsDefault;
+  const parsed = projectsPageSchema.safeParse(rows[0].config);
+  return parsed.success ? parsed.data : projectsDefault;
+}
+
+export async function saveProjects(input: ProjectsPage): Promise<ProjectsPage> {
+  await ensureReady();
+  const projects = projectsPageSchema.parse(input);
+  const { rows } = await query<{ config: ProjectsPage }>(
+    `INSERT INTO site_content (key, config, updated_at)
+     VALUES ('projects', $1::jsonb, now())
+     ON CONFLICT (key) DO UPDATE SET config = EXCLUDED.config, updated_at = now()
+     RETURNING config`,
+    [JSON.stringify(projects)],
+  );
+  return projectsPageSchema.parse(rows[0].config);
 }

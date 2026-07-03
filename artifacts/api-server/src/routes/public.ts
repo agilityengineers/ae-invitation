@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
-import { listPublishedVariants, getVariant, getDefaultVariant, getFrontPage } from "@/lib/config";
-import { defaultForTemplate, frontPageDefault } from "@/config/defaults";
+import { listPublishedVariants, getVariant, getDefaultVariant, getFrontPage, getProjects } from "@/lib/config";
+import { defaultForTemplate, frontPageDefault, projectsDefault } from "@/config/defaults";
 import { templateTypeSchema } from "@/config/schema";
 
 const router: IRouter = Router();
@@ -36,6 +36,16 @@ router.get("/public/defaults/:type", async (req, res) => {
 router.get("/public/frontpage", async (_req, res) => {
   const frontPage = await getFrontPage().catch(() => frontPageDefault);
   res.json({ frontPage });
+});
+
+/**
+ * Public: the portfolio content served at /projects. Returns the admin-edited
+ * config if present, otherwise the bundled default — so it never 404s (mirrors
+ * /public/frontpage).
+ */
+router.get("/public/projects", async (_req, res) => {
+  const projects = await getProjects().catch(() => projectsDefault);
+  res.json({ projects });
 });
 
 /** Public: a single published variant by slug (landing + booking pages). */

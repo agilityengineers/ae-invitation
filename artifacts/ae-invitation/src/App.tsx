@@ -14,6 +14,7 @@ import AdminHome from "@/pages/admin/index";
 import NewPage from "@/pages/admin/new";
 import LeadsPage from "@/pages/admin/leads";
 import FrontPageEditPage from "@/pages/admin/frontpage";
+import ProjectsEditPage from "@/pages/admin/projects";
 import EditPage from "@/pages/admin/edit";
 import NotFound from "@/pages/not-found";
 
@@ -38,6 +39,7 @@ function Router() {
       <Route path="/admin/new" component={NewPage} />
       <Route path="/admin/leads" component={LeadsPage} />
       <Route path="/admin/frontpage" component={FrontPageEditPage} />
+      <Route path="/admin/projects" component={ProjectsEditPage} />
       <Route path="/admin" component={AdminHome} />
       <Route path="/admin/:slug" component={EditPage} />
       <Route path="/book/:slug" component={BookPage} />
