@@ -51,7 +51,7 @@ export default function FrontPage() {
 
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-ink)", background: "#fff" }}>
-      <FrontHeader />
+      <FrontHeader links={[{ label: "Our Work", href: "/projects" }]} />
       <Hero config={config} onBook={onBook} />
       <FrontFooter config={config} />
     </div>
@@ -59,9 +59,11 @@ export default function FrontPage() {
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────────
-   Reuses Nav.tsx's exact white-bar wrapper geometry, but renders only the logo —
-   no nav links and no conversion CTA, so the routing choice below is the page. */
-function FrontHeader() {
+   Reuses Nav.tsx's exact white-bar wrapper geometry: logo plus optional in-app
+   nav links (styled with the shared .ae-nav underline treatment), but no
+   conversion CTA. Exported so sibling static pages (e.g. /projects) share the
+   same header. */
+export function FrontHeader({ links = [] }: { links?: { label: string; href: string }[] }) {
   return (
     <div style={{ background: "#fff", borderBottom: "1px solid var(--color-line)" }}>
       <header
@@ -76,6 +78,15 @@ function FrontHeader() {
         }}
       >
         <Logo treatment="chip" size={HEADER_LOGO_SIZE} />
+        {links.length > 0 && (
+          <nav style={{ display: "flex", alignItems: "center", gap: 22 }}>
+            {links.map((l) => (
+              <Link key={l.href} href={l.href} className="ae-nav">
+                {l.label}
+              </Link>
+            ))}
+          </nav>
+        )}
       </header>
     </div>
   );
@@ -303,8 +314,9 @@ function PathCard({
 
 /* ── Footer ───────────────────────────────────────────────────────────────────
    Reuses Footer.tsx's navy-900 band styling and the site tagline / legal row, but
-   without the variant-bound qualifier CtaButton. */
-function FrontFooter({ config }: { config: FrontPageConfig }) {
+   without the variant-bound qualifier CtaButton. Exported so sibling static
+   pages (e.g. /projects) share the same footer. */
+export function FrontFooter({ config }: { config: FrontPageConfig }) {
   const year = new Date().getFullYear();
   return (
     <footer
