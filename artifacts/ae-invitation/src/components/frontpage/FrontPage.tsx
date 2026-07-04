@@ -54,7 +54,7 @@ export default function FrontPage() {
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-ink)", background: "#fff" }}>
       <FrontHeader links={[{ label: "Our Work", href: "/projects" }]} />
       <Hero config={config} onBook={onBook} />
-      <FrontFooter config={config} />
+      {config.sections.footer && <FrontFooter config={config} />}
     </div>
   );
 }
@@ -166,61 +166,70 @@ function Hero({ config, onBook }: { config: FrontPageConfig; onBook: () => void 
           {config.subhead}
         </p>
 
-        {/* Two path cards — client first (leads on mobile, sits left on desktop) */}
-        <div
-          style={{
-            marginTop: "clamp(28px,4vw,44px)",
-            display: "grid",
-            gap: "clamp(16px,2vw,24px)",
-            gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
-          }}
-        >
-          <PathCard
-            card={config.clientCard}
-            accent="navy"
-            icon={<Lightbulb size={22} strokeWidth={2.2} />}
-          />
-          <PathCard
-            card={config.talentCard}
-            accent="teal"
-            icon={<Code2 size={22} strokeWidth={2.2} />}
-          />
-        </div>
+        {/* Two path cards — client first (leads on mobile, sits left on desktop).
+            Each is independently toggleable from the admin Sections panel. */}
+        {(config.sections.clientCard || config.sections.talentCard) && (
+          <div
+            style={{
+              marginTop: "clamp(28px,4vw,44px)",
+              display: "grid",
+              gap: "clamp(16px,2vw,24px)",
+              gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
+            }}
+          >
+            {config.sections.clientCard && (
+              <PathCard
+                card={config.clientCard}
+                accent="navy"
+                icon={<Lightbulb size={22} strokeWidth={2.2} />}
+              />
+            )}
+            {config.sections.talentCard && (
+              <PathCard
+                card={config.talentCard}
+                accent="teal"
+                icon={<Code2 size={22} strokeWidth={2.2} />}
+              />
+            )}
+          </div>
+        )}
 
         {/* Standalone client CTA — the one green action; opens the client scheduler
             directly (in sync with the client default's booking config). */}
-        <div style={{ marginTop: "clamp(28px,4vw,40px)", textAlign: "center" }}>
-          <p style={{ font: "600 14px/1.4 var(--font-body)", color: "#d7ecf3" }}>
-            {config.cta.prompt}
-          </p>
-          <button
-            type="button"
-            onClick={onBook}
-            className="ae-cta"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 10,
-              marginTop: 12,
-              border: "none",
-              cursor: "pointer",
-              background: "var(--color-cta)",
-              color: "#fff",
-              font: "700 16px/1 var(--font-display)",
-              padding: "18px 28px",
-              borderRadius: "var(--radius-btn)",
-              boxShadow: "0 12px 28px rgba(46,139,87,.4)",
-            }}
-          >
-            {config.cta.label}
-            <span className="ae-arrow" style={{ fontSize: 18 }} aria-hidden>
-              &rarr;
-            </span>
-          </button>
-          <p style={{ marginTop: 12, font: "500 12.5px/1.5 var(--font-body)", color: "#a9cede" }}>
-            {config.cta.footnote}
-          </p>
-        </div>
+        {config.sections.cta && (
+          <div style={{ marginTop: "clamp(28px,4vw,40px)", textAlign: "center" }}>
+            <p style={{ font: "600 14px/1.4 var(--font-body)", color: "#d7ecf3" }}>
+              {config.cta.prompt}
+            </p>
+            <button
+              type="button"
+              onClick={onBook}
+              className="ae-cta"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 10,
+                marginTop: 12,
+                border: "none",
+                cursor: "pointer",
+                background: "var(--color-cta)",
+                color: "#fff",
+                font: "700 16px/1 var(--font-display)",
+                padding: "18px 28px",
+                borderRadius: "var(--radius-btn)",
+                boxShadow: "0 12px 28px rgba(46,139,87,.4)",
+              }}
+            >
+              {config.cta.label}
+              <span className="ae-arrow" style={{ fontSize: 18 }} aria-hidden>
+                &rarr;
+              </span>
+            </button>
+            <p style={{ marginTop: 12, font: "500 12.5px/1.5 var(--font-body)", color: "#a9cede" }}>
+              {config.cta.footnote}
+            </p>
+          </div>
+        )}
       </div>
     </section>
   );

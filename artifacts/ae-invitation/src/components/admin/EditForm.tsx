@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { Link } from "wouter";
 import { regenerableSections, type Provider, type Variant } from "@/config/schema";
 import { FieldNode, setByPath, type Path } from "@/components/admin/fields";
 import { ImageInput } from "@/components/admin/ImageInput";
+import { usePageDraft, SaveControls } from "@/hooks/usePageDraft";
 
 const SECTION_TITLES: Record<string, string> = {
   hero: "Hero",
@@ -26,34 +27,14 @@ function omitCopy(path: Path): boolean {
 }
 
 export function EditForm({ initial, providers, generated }: { initial: Variant; providers: Provider[]; generated: boolean }) {
-  const [draft, setDraft] = useState<Variant>(initial);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const { draft, setDraft, status, lastSavedAt, dirty, saveNow } = usePageDraft<Variant>({
+    initial,
+    endpoint: "/api/variants",
+    label: "Page",
+  });
   const [regen, setRegen] = useState<string>("");
   const [provider, setProvider] = useState<Provider | "">(providers[0] ?? "");
-  const first = useRef(true);
   const talent = draft.templateType === "talent";
-
-  // Debounced autosave.
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    setStatus("saving");
-    const id = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/variants", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
-        });
-        setStatus(res.ok ? "saved" : "error");
-      } catch {
-        setStatus("error");
-      }
-    }, 800);
-    return () => clearTimeout(id);
-  }, [draft]);
 
   const onCopy = useCallback((path: Path, value: unknown) => {
     setDraft((d) => ({ ...d, copy: setByPath(d.copy, path, value) }));
@@ -108,7 +89,7 @@ export function EditForm({ initial, providers, generated }: { initial: Variant; 
               onChange={(e) => setTop({ label: e.target.value })}
               className="w-full max-w-xs truncate border-0 bg-transparent font-display text-xl font-extrabold text-navy outline-none"
             />
-            <div className="text-xs text-muted-2">/{draft.slug} · {draft.templateType} · <SaveBadge status={status} /></div>
+            <div className="text-xs text-muted-2">/{draft.slug} · {draft.templateType}</div>
           </div>
           <div className="flex flex-wrap items-center gap-2 text-sm font-semibold">
             <Link href={draft.published ? `/${draft.slug}` : `/preview/${draft.slug}`} target="_blank" className="rounded-lg border border-line px-3 py-2 text-navy">
@@ -118,6 +99,7 @@ export function EditForm({ initial, providers, generated }: { initial: Variant; 
             <button onClick={togglePublish} className={`rounded-lg px-3 py-2 text-white ${draft.published ? "bg-amber-600" : "bg-cta"}`}>
               {draft.published ? "Unpublish" : "Publish"}
             </button>
+            <SaveControls status={status} dirty={dirty} lastSavedAt={lastSavedAt} onSave={saveNow} />
           </div>
         </div>
         {generated && <p className="mt-2 text-xs text-cta">✓ Generated with AI — review the copy, fill any [needs your data] placeholders, then publish.</p>}
@@ -134,8 +116,30 @@ export function EditForm({ initial, providers, generated }: { initial: Variant; 
         </div>
       )}
 
+      {/* Sections toggle map — first and open by default so it's discoverable. */}
+      <Section title="Sections" defaultOpen>
+        <p className="mb-3 text-xs text-muted-2">Turn sections of this page on or off. Hidden sections are removed from the published page and greyed out below.</p>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {Object.keys(draft.sections).map((k) => {
+            const key = k as keyof Variant["sections"];
+            return (
+              <label key={k} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium capitalize">
+                <input
+                  type="checkbox"
+                  checked={draft.sections[key]}
+                  onChange={(e) => setTop({ sections: { ...draft.sections, [key]: e.target.checked } })}
+                  className="h-4 w-4 accent-[#2E8B57]"
+                />
+                {k}
+              </label>
+            );
+          })}
+        </div>
+        <p className="mt-2 text-xs text-muted-2">Hiding a section that leaves two same-background sections adjacent auto-inserts a separator on the page.</p>
+      </Section>
+
       {/* Targeting */}
-      <Section title="Targeting & audience" defaultOpen>
+      <Section title="Targeting & audience">
         <label className="block">
           <span className="mb-1 block text-xs font-semibold text-muted">Audience (interpolated as {"{audience}"})</span>
           <input className="ae-input" value={draft.audience} onChange={(e) => setTop({ audience: e.target.value })} />
@@ -155,27 +159,6 @@ export function EditForm({ initial, providers, generated }: { initial: Variant; 
             </label>
           ))}
         </div>
-      </Section>
-
-      {/* Sections toggle map */}
-      <Section title="Sections">
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {Object.keys(draft.sections).map((k) => {
-            const key = k as keyof Variant["sections"];
-            return (
-              <label key={k} className="flex items-center gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium capitalize">
-                <input
-                  type="checkbox"
-                  checked={draft.sections[key]}
-                  onChange={(e) => setTop({ sections: { ...draft.sections, [key]: e.target.checked } })}
-                  className="h-4 w-4 accent-[#2E8B57]"
-                />
-                {k}
-              </label>
-            );
-          })}
-        </div>
-        <p className="mt-2 text-xs text-muted-2">Hiding a section that leaves two same-background sections adjacent auto-inserts a separator on the page.</p>
       </Section>
 
       {/* Copy — per section with regenerate */}
@@ -395,10 +378,4 @@ function Section({ title, children, defaultOpen = false, disabled = false }: { t
       <div className="border-t border-line px-4 py-4">{children}</div>
     </details>
   );
-}
-
-function SaveBadge({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
-  const map = { idle: "", saving: "Saving…", saved: "✓ Saved", error: "⚠ Save failed" };
-  const color = status === "error" ? "text-red-600" : status === "saved" ? "text-cta" : "text-muted-2";
-  return <span className={color}>{map[status]}</span>;
 }

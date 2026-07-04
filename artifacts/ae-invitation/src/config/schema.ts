@@ -332,6 +332,18 @@ export const frontPageSchema = z.object({
     termsUrl: z.string().url().default("https://www.agility-engineers.com/about/terms"),
     privacyUrl: z.string().url().default("https://www.agility-engineers.com/about/privacy"),
   }),
+  // Which optional blocks render on the public front page. Hero copy (eyebrow,
+  // headline, subhead) is the page's identity and always shows; these are the
+  // admin-toggleable blocks. `.default({})` keeps records saved before this
+  // field existed valid — they resolve to all-on.
+  sections: z
+    .object({
+      clientCard: z.boolean().default(true),
+      talentCard: z.boolean().default(true),
+      cta: z.boolean().default(true),
+      footer: z.boolean().default(true),
+    })
+    .default({}),
 });
 export type FrontPage = z.infer<typeof frontPageSchema>;
 
@@ -351,6 +363,9 @@ export const projectSchema = z.object({
   screenshotAlt: z.string().default(""),
   url: z.string().default(""),
   tags: z.array(z.string()).default([]),
+  // Show this project on the public page. Lets an admin hide a card without
+  // deleting it. `.default(true)` keeps pre-existing records visible.
+  visible: z.boolean().default(true),
 });
 export type Project = z.infer<typeof projectSchema>;
 
@@ -367,6 +382,9 @@ export const projectsPageSchema = z.object({
     })
     .default({}),
   items: z.array(projectSchema).default([]),
+  // Toggle the intro band on the public /projects page. `.default({})` keeps
+  // pre-existing records valid (intro shown).
+  sections: z.object({ intro: z.boolean().default(true) }).default({}),
 });
 export type ProjectsPage = z.infer<typeof projectsPageSchema>;
 

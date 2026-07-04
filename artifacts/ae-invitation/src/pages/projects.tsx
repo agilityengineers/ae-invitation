@@ -34,7 +34,7 @@ export default function ProjectsPage() {
   return (
     <div style={{ fontFamily: "var(--font-body)", color: "var(--color-ink)", background: "#fff" }}>
       <FrontHeader links={[{ label: "Home", href: "/" }, { label: "Our Work", href: "/projects" }]} />
-      <Intro intro={config.intro} />
+      {config.sections.intro && <Intro intro={config.intro} />}
       <main
         style={{
           maxWidth: 1180,
@@ -52,11 +52,13 @@ export default function ProjectsPage() {
             gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))",
           }}
         >
-          {config.items.map((project, i) => (
-            <li key={project.id || project.name || i} style={{ display: "flex" }}>
-              <ProjectCard project={project} />
-            </li>
-          ))}
+          {config.items
+            .filter((project) => project.visible !== false)
+            .map((project, i) => (
+              <li key={project.id || project.name || i} style={{ display: "flex" }}>
+                <ProjectCard project={project} />
+              </li>
+            ))}
         </ul>
       </main>
       <FrontFooter config={frontPageDefault} />

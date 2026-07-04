@@ -1,43 +1,26 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { Link } from "wouter";
 import type { ProjectsPage, Project } from "@/config/schema";
 import { ImageInput } from "@/components/admin/ImageInput";
+import { usePageDraft, SaveControls } from "@/hooks/usePageDraft";
 
 /**
- * Admin editor for the public portfolio page (/projects). Mirrors the front-page
- * editor's 800ms debounced autosave and PATCH-to-API pattern, but the portfolio
- * is a variable-length list, so it uses an explicit add / remove / reorder card
- * editor (like EditForm's "Header links") plus the shared ImageInput for each
- * project's screenshot (URL paste / S3 upload / AI generation, all → a URL).
+ * Admin editor for the public portfolio page (/projects). Uses the shared
+ * usePageDraft engine (800ms debounced autosave + explicit Save button) like the
+ * other editors, but the portfolio is a variable-length list, so it uses an
+ * explicit add / remove / reorder card editor (like EditForm's "Header links")
+ * plus the shared ImageInput for each project's screenshot (URL paste / S3
+ * upload / AI generation, all → a URL). The intro band is toggleable, and each
+ * project has a show/hide toggle so a card can be pulled without deleting it.
  */
 export function ProjectsEditForm({ initial }: { initial: ProjectsPage }) {
-  const [draft, setDraft] = useState<ProjectsPage>(initial);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const first = useRef(true);
-
-  // Debounced autosave (matches FrontPageEditForm / EditForm).
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    setStatus("saving");
-    const id = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/projects", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
-        });
-        setStatus(res.ok ? "saved" : "error");
-      } catch {
-        setStatus("error");
-      }
-    }, 800);
-    return () => clearTimeout(id);
-  }, [draft]);
+  const { draft, setDraft, status, lastSavedAt, dirty, saveNow } = usePageDraft<ProjectsPage>({
+    initial,
+    endpoint: "/api/projects",
+    label: "Projects",
+  });
 
   const setIntro = (patch: Partial<ProjectsPage["intro"]>) =>
     setDraft((d) => ({ ...d, intro: { ...d.intro, ...patch } }));
@@ -61,6 +44,7 @@ export function ProjectsEditForm({ initial }: { initial: ProjectsPage }) {
           screenshotAlt: "",
           url: "",
           tags: [],
+          visible: true,
         },
       ],
     }));
@@ -84,19 +68,39 @@ export function ProjectsEditForm({ initial }: { initial: ProjectsPage }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="font-display text-xl font-extrabold text-navy">Projects</h1>
-            <div className="text-xs text-muted-2">
-              /projects · <SaveBadge status={status} />
-            </div>
+            <div className="text-xs text-muted-2">/projects</div>
           </div>
-          <Link
-            href="/projects"
-            target="_blank"
-            className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-navy"
-          >
-            View
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/projects"
+              target="_blank"
+              className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-navy"
+            >
+              View
+            </Link>
+            <SaveControls status={status} dirty={dirty} lastSavedAt={lastSavedAt} onSave={saveNow} />
+          </div>
         </div>
       </div>
+
+      {/* Sections — show/hide the page's optional bands */}
+      <Section title="Sections" defaultOpen>
+        <label className="flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium">
+          Intro band
+          <input
+            type="checkbox"
+            checked={draft.sections.intro}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, sections: { ...d.sections, intro: e.target.checked } }))
+            }
+            className="h-4 w-4 accent-[#2E8B57]"
+          />
+        </label>
+        <p className="mt-2 text-xs text-muted-2">
+          Hide the navy intro band at the top of /projects. Individual projects have their own
+          &ldquo;Show on page&rdquo; toggle below.
+        </p>
+      </Section>
 
       {/* Intro copy */}
       <Section title="Page intro" defaultOpen>
@@ -146,8 +150,20 @@ export function ProjectsEditForm({ initial }: { initial: ProjectsPage }) {
             <div className="mb-3 flex items-center justify-between gap-2">
               <span className="font-display text-sm font-bold text-navy">
                 {item.name.trim() || `Project ${i + 1}`}
+                {item.visible === false && (
+                  <span className="ml-2 text-xs font-normal text-muted-2">(hidden)</span>
+                )}
               </span>
               <div className="flex items-center gap-1">
+                <label className="mr-1 flex items-center gap-1.5 rounded-lg border border-line px-2 py-1 text-xs font-semibold text-navy">
+                  <input
+                    type="checkbox"
+                    checked={item.visible !== false}
+                    onChange={(e) => updateItem(i, { visible: e.target.checked })}
+                    className="h-3.5 w-3.5 accent-[#2E8B57]"
+                  />
+                  Show on page
+                </label>
                 <button
                   type="button"
                   onClick={() => moveItem(i, -1)}
@@ -286,11 +302,4 @@ function Section({
       <div className="border-t border-line px-4 py-4">{children}</div>
     </details>
   );
-}
-
-function SaveBadge({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
-  const map = { idle: "", saving: "Saving…", saved: "✓ Saved", error: "⚠ Save failed" };
-  const color =
-    status === "error" ? "text-red-600" : status === "saved" ? "text-cta" : "text-muted-2";
-  return <span className={color}>{map[status]}</span>;
 }

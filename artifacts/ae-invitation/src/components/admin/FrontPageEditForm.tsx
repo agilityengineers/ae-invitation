@@ -1,42 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import type { FrontPage } from "@/config/schema";
 import { FieldNode, setByPath, type Path } from "@/components/admin/fields";
+import { usePageDraft, SaveControls } from "@/hooks/usePageDraft";
+
+const SECTION_LABELS: Record<keyof FrontPage["sections"], string> = {
+  clientCard: "Client path card",
+  talentCard: "Talent path card",
+  cta: "Book-a-meeting CTA",
+  footer: "Footer",
+};
 
 /**
  * Admin editor for the public front page (/). Reuses the same recursive field
- * editor and 800ms debounced autosave as the landing-page EditForm, but the front
- * page is a single content object (no variant envelope, sections, qualifier or
- * regenerate), so the whole config is driven by one FieldNode tree.
+ * editor and the shared usePageDraft engine (800ms debounced autosave + explicit
+ * Save button) as the landing-page EditForm. The front page is a single content
+ * object, so the copy is driven by one FieldNode tree; the `sections` toggle map
+ * is rendered as a dedicated panel and omitted from that tree.
  */
 export function FrontPageEditForm({ initial }: { initial: FrontPage }) {
-  const [draft, setDraft] = useState<FrontPage>(initial);
-  const [status, setStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
-  const first = useRef(true);
-
-  // Debounced autosave (matches EditForm).
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    setStatus("saving");
-    const id = setTimeout(async () => {
-      try {
-        const res = await fetch("/api/frontpage", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft),
-        });
-        setStatus(res.ok ? "saved" : "error");
-      } catch {
-        setStatus("error");
-      }
-    }, 800);
-    return () => clearTimeout(id);
-  }, [draft]);
+  const { draft, setDraft, status, lastSavedAt, dirty, saveNow } = usePageDraft<FrontPage>({
+    initial,
+    endpoint: "/api/frontpage",
+    label: "Front page",
+  });
 
   const onField = (path: Path, value: unknown) => setDraft((d) => setByPath(d, path, value));
 
@@ -47,15 +35,45 @@ export function FrontPageEditForm({ initial }: { initial: FrontPage }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="min-w-0">
             <h1 className="font-display text-xl font-extrabold text-navy">Front page</h1>
-            <div className="text-xs text-muted-2">
-              / · <SaveBadge status={status} />
-            </div>
+            <div className="text-xs text-muted-2">/</div>
           </div>
-          <Link href="/" target="_blank" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-navy">
-            View
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link href="/" target="_blank" className="rounded-lg border border-line px-3 py-2 text-sm font-semibold text-navy">
+              View
+            </Link>
+            <SaveControls status={status} dirty={dirty} lastSavedAt={lastSavedAt} onSave={saveNow} />
+          </div>
         </div>
       </div>
+
+      {/* Sections — show/hide the front page's optional blocks */}
+      <details open className="mb-3 rounded-xl border border-line bg-white">
+        <summary className="cursor-pointer px-4 py-3 font-display font-bold text-navy">Sections</summary>
+        <div className="border-t border-line px-4 py-4">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {(Object.keys(draft.sections) as (keyof FrontPage["sections"])[]).map((key) => (
+              <label
+                key={key}
+                className="flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2 text-sm font-medium"
+              >
+                {SECTION_LABELS[key]}
+                <input
+                  type="checkbox"
+                  checked={draft.sections[key]}
+                  onChange={(e) =>
+                    setDraft((d) => ({ ...d, sections: { ...d.sections, [key]: e.target.checked } }))
+                  }
+                  className="h-4 w-4 accent-[#2E8B57]"
+                />
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-xs text-muted-2">
+            The eyebrow, headline and subhead always show — they identify the page. Turning both path
+            cards off leaves only the headline and CTA.
+          </p>
+        </div>
+      </details>
 
       <details open className="mb-3 rounded-xl border border-line bg-white">
         <summary className="cursor-pointer px-4 py-3 font-display font-bold text-navy">Front page content</summary>
@@ -65,15 +83,9 @@ export function FrontPageEditForm({ initial }: { initial: FrontPage }) {
             {" "}&ldquo;{draft.cta.label}&rdquo; button opens whichever scheduler is configured on the current
             {" "}<strong>client</strong> default — set it in that page&rsquo;s Scheduler / booking settings.
           </p>
-          <FieldNode value={draft} path={[]} onChange={onField} />
+          <FieldNode value={draft} path={[]} onChange={onField} omit={(p) => p[0] === "sections"} />
         </div>
       </details>
     </div>
   );
-}
-
-function SaveBadge({ status }: { status: "idle" | "saving" | "saved" | "error" }) {
-  const map = { idle: "", saving: "Saving…", saved: "✓ Saved", error: "⚠ Save failed" };
-  const color = status === "error" ? "text-red-600" : status === "saved" ? "text-cta" : "text-muted-2";
-  return <span className={color}>{map[status]}</span>;
 }
